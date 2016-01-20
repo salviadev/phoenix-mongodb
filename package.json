@@ -1,0 +1,31 @@
+{
+  "name": "phoenix-mongodb",
+  "description": "Phoenix Mongodb",
+  "version": "0.0.1",
+  "author": "Mihai STOIE <mihaistoie@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+      "mongodb": "^2.1.4",
+      "phoenix-json-schema-tools": "git+https://git@github.com/salviadev/phoenix-json-schema-tools.git"
+  },
+  "devDependencies": {
+    "del": "latest",
+    "gulp": "latest",
+    "gulp-typescript": "latest",
+    "merge2": "latest",
+    "mocha": "latest",
+    "typescript": "next"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/salviadev/phoenix-mongodb.git"
+  },
+  "main": "./index.js",
+  "typescript": {
+    "definition": "lib/definitions/index.d.ts"
+  },
+  "scripts": {
+    "prepublish": "gulp",
+    "test": "node_modules/.bin/mocha  test/**/*.test.js"
+  }
+}
