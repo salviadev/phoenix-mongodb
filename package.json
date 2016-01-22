@@ -6,10 +6,12 @@
   "license": "MIT",
   "dependencies": {
       "mongodb": "^2.1.4",
+      "JSONStream": "latest",
       "phoenix-json-schema-tools": "git+https://git@github.com/salviadev/phoenix-json-schema-tools.git"
   },
   "devDependencies": {
     "del": "latest",
+    "dts-bundle": "latest",
     "gulp": "latest",
     "gulp-typescript": "latest",
     "merge2": "latest",

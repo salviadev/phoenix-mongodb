@@ -1,4 +1,5 @@
-"use script";
+"use strict";
+
 export function connectionString(configMongo: { port?: number, host?: string, user?: string, password?: string, database?: string, options?: any }): string {
     configMongo = configMongo || {};
     configMongo.port = configMongo.port || 27017;

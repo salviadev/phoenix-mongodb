@@ -1,15 +1,43 @@
-"use script";
+"use strict";
 
 import * as mongodb from 'mongodb';
-import * as jsonSchema  from 'phoenixJsonSchema';
-import * as dbSchema from './dbschemautils';
 
-async function _jsonSchema2Database(db: mongodb.Db, schema: any) {
+import * as stream from 'stream';
+import * as jsonSchema  from 'phoenix-json-schema-tools';
+import * as dbSchema from './utils/mongo-schema';
+import * as mongodbp  from './utils/mongo-promises';
+import * as mongodbImport  from './utils/mongo-import';
+
+export async function createCollection(db: mongodb.Db, schema: any): Promise<void> {
     await jsonSchema.checkSchema(schema);
-    let  indexes = jsonSchema.indexesOfSchema(schema, true);
-    let collection =  await dbSchema.db.createCollection(db, schema.name);
+    let indexes = jsonSchema.indexesOfSchema(schema, true);
+    let collection = await dbSchema.db.createCollection(db, schema.name);
     await dbSchema.collection.createIndexes(collection, indexes);
 }
+
+
+export async function createDatabase(db: mongodb.Db, schemas: any[]): Promise<void> {
+    let p = schemas.map(function(schema) {
+        return createCollection(db, schema);
+    });
+    await Promise.all<void>(p);
+
+}
+
+export async function createCollectionAndImportFromStream(db: mongodb.Db, schema: any, stream: stream.Readable): Promise<void> {
+    await createCollection(db, schema);
+    let collection = await mongodbp.collection(db, schema.name);
+    mongodbImport.importCollectionFromStream(collection, schema, stream)
+}
+
+export async function createCollectionAndImportFile(db: mongodb.Db, schema: any, file: string): Promise<void> {
+    await createCollection(db, schema);
+    let collection = await mongodbp.collection(db, schema.name);
+    await mongodbImport.importCollectionFromFile(collection, schema, file);
+}
+
+/*
+
 
 var fs = require('fs'),
     path = require("path"),
@@ -43,35 +71,7 @@ async function _loadSchemaFromFiles(files, after) {
 
 
 
-function _importCollection(schema, collection, file, after, cb) {
-    fs.open(file, 'r', function(err, fd) {
-        var _after = function(error) {
-            if (fd) {
-                fs.close(fd, function(err) {
-                    after(error);
-                });
-            } else
-                after(error);
-        };
-        if (err) return _after(null);
 
-        var stream = fs.createReadStream(file, {
-            encoding: 'utf8'
-        }),
-            parser = JSONStream.parse('results.*'),
-            ms = mongoStream(collection, schema);
-        var r = stream.pipe(parser).pipe(ms);
-        r.on('finish', function(data) {
-            if (cb) cb(schema.$name, ms.inserted);
-            _after();
-        });
-
-        r.on('error', function(err) {
-            _after(err);
-        });
-    });
-
-}
 
 
 function _loadSchemaFromFolder(schemapath, after) {
@@ -109,7 +109,7 @@ function _createDatabaseCollections(db, schemapath, dataPath, cb, after) {
             if (err) return after(err, null);
             schemas = schemas || [];
             async.each(schemas, function(schema, callback) {
-                _schema2Db(db, schema, function(err, collection) {
+                createCollectionFromSchema(db, schema, function(err, collection) {
                     if (err) return callback(err);
                     if (dataPath) {
                         _importCollection(schema, collection, path.resolve(dataPath, schema.$name + '.json'), function(err) {
@@ -133,34 +133,12 @@ function _createDatabaseCollections(db, schemapath, dataPath, cb, after) {
     });
 }
 
-function _createCollection(db, schemaName, schemapath, dataPath, cb, after) {
-    json.loadFromFile(path.resolve(schemapath, schemaName + '.json'), function(err, schema) {
-        if (err) return after(err, null);
-        schemaUtils.db.dropCollection(db, schema.$name, function(err) {
-            if (err) return after(err, null);
-            _schema2Db(db, schema, function(err, collection) {
-                if (err) return after(err, null);
-                if (dataPath) {
-                    _importCollection(schema, collection, path.resolve(dataPath, schema.$name + '.json'), function(err) {
-                        if (err)
-                            return after(err, null);
-                        else
-                            return after(null, null);
-                    }, cb);
-                } else
-                    return after(null, null);
 
-            });
-
-        });
-
-    });
-}
 
 
 
 module.exports = {
-    createDatabase: _createDatabaseCollections,
-    createCollection: _createCollection,
-    createCollectionFromSchema: _schema2Db
+    createCollection: _createCollection
+
 };
+*/

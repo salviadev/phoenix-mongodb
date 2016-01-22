@@ -1,4 +1,4 @@
-"use script";
+"use strict";
 
 import * as mongodb from 'mongodb';
 
@@ -27,12 +27,14 @@ function _dropCollection(db: mongodb.Db, collectionName: string): Promise<void> 
 
 async function _removeCollections(db: mongodb.Db, except?: string[]): Promise<void> {
     let collections = await _getCollections(db);
+    let p = [];
     for (let i = 0, len = collections.length; i < len; i++) {
         let collection = collections[i];
         if (except && except.indexOf(collection.name) >= 0)
             continue;
-        await _dropCollection(db, collection.name);
+        p.push(_dropCollection(db, collection.name));
     }
+    await Promise.all<void>(p);
 }
 
 function _dropAllIndexes(db: mongodb.Db, collection: mongodb.Collection): Promise<void> {
@@ -64,7 +66,7 @@ function _createIndex(collection: mongodb.Collection, indexFields: string, uniqu
     fields.forEach(function(field) {
         let fields = field.trim().split(' ');
         if (fields.length > 1)
-            indexDesc[fields[0]] = fields[2] == 'desc' ? -1 : 1;
+            indexDesc[fields[0]] = fields[2] === 'desc' ? -1 : 1;
         else
             indexDesc[fields[0]] = 1;
     });
@@ -97,13 +99,14 @@ function _createTextIndex(collection: mongodb.Collection, indexFields: string): 
 
 async function _createIndexes(collection: mongodb.Collection, indexes: any[]): Promise<void> {
     if (indexes && indexes.length) {
-        for (let i = 0, len = indexes.length; i < len; i++) {
-            let indexDesc = indexes[i];
+        let p = [];
+        for (let indexDesc of indexes) {
             if (indexDesc.text)
-                await _createTextIndex(collection, indexDesc.fields);
+                p.push(_createTextIndex(collection, indexDesc.fields));
             else
-                await _createIndex(collection, indexDesc.fields, indexDesc.unique);
+                p.push(_createIndex(collection, indexDesc.fields, indexDesc.unique));
         }
+        await Promise.all<void>(p);
     }
 }
 

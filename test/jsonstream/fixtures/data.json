@@ -1,0 +1,139 @@
+[
+    {
+        "idcommune": "ARTHON EN RETZ",
+        "commune": "ARTHON EN RETZ"
+    },
+    {
+        "idcommune": "BATZ SUR MER",
+        "commune": "BATZ SUR MER"
+    },
+    {
+        "idcommune": "BLAIN",
+        "commune": "BLAIN"
+    },
+    {
+        "idcommune": "CAMPBON",
+        "commune": "CAMPBON"
+    },
+    {
+        "idcommune": "CHAUVE",
+        "commune": "CHAUVE"
+    },
+    {
+        "idcommune": "CORSEPT",
+        "commune": "CORSEPT"
+    },
+    {
+        "idcommune": "GUÉRANDE",
+        "commune": "GUÉRANDE"
+    },
+    {
+        "idcommune": "HERBIGNAC",
+        "commune": "HERBIGNAC"
+    },
+    {
+        "idcommune": "LA BAULE",
+        "commune": "LA BAULE"
+    },
+    {
+        "idcommune": "LA CHAPELLE LAUNAY",
+        "commune": "LA CHAPELLE LAUNAY"
+    },
+    {
+        "idcommune": "LA CHAPELLE-DES-MARAIS",
+        "commune": "LA CHAPELLE-DES-MARAIS"
+    },
+    {
+        "idcommune": "LA PLAINE SUR MER",
+        "commune": "LA PLAINE SUR MER"
+    },
+    {
+        "idcommune": "LA TURBALLE",
+        "commune": "LA TURBALLE"
+    },
+    {
+        "idcommune": "LE CROISIC",
+        "commune": "LE CROISIC"
+    },
+    {
+        "idcommune": "LE POULIGUEN",
+        "commune": "LE POULIGUEN"
+    },
+    {
+        "idcommune": "MISSILLAC",
+        "commune": "MISSILLAC"
+    },
+    {
+        "idcommune": "PIRIAC SUR MER",
+        "commune": "PIRIAC SUR MER"
+    },
+    {
+        "idcommune": "PLESSÉ",
+        "commune": "PLESSÉ"
+    },
+    {
+        "idcommune": "PORNIC",
+        "commune": "PORNIC"
+    },
+    {
+        "idcommune": "PORNICHET",
+        "commune": "PORNICHET"
+    },
+    {
+        "idcommune": "SAINT LYPHARD",
+        "commune": "SAINT LYPHARD"
+    },
+    {
+        "idcommune": "SAINT MOLF",
+        "commune": "SAINT MOLF"
+    },
+    {
+        "idcommune": "SAINT-ANDRE-DES-EAUX",
+        "commune": "SAINT-ANDRE-DES-EAUX"
+    },
+    {
+        "idcommune": "SAINT-BREVIN LES PINS",
+        "commune": "SAINT-BREVIN LES PINS"
+    },
+    {
+        "idcommune": "SAINT-HILAIRE DE CHALEONS",
+        "commune": "SAINT-HILAIRE DE CHALEONS"
+    },
+    {
+        "idcommune": "SAINT-JOACHIM",
+        "commune": "SAINT-JOACHIM"
+    },
+    {
+        "idcommune": "SAINT-MICHEL CHEF CHEF",
+        "commune": "SAINT-MICHEL CHEF CHEF"
+    },
+    {
+        "idcommune": "SAINT-NAZAIRE",
+        "commune": "SAINT-NAZAIRE"
+    },
+    {
+        "idcommune": "SAINTE-PAZANNE",
+        "commune": "SAINTE-PAZANNE"
+    },
+    {
+        "idcommune": "SAVENAY",
+        "commune": "SAVENAY"
+    },
+    {
+        "idcommune": "TRIGNAC",
+        "commune": "TRIGNAC",
+        "inside_object": {
+            "end": true
+        },
+        "inside_array": [
+            {
+                "idcommune": "SAINTE-PAZANNE",
+                "commune": "SAINTE-PAZANNE"
+            },
+            {
+                "idcommune": "SAVENAY",
+                "commune": "SAVENAY"
+            }
+        ]
+    }
+]
