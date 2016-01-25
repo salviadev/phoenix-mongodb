@@ -27,7 +27,6 @@
     "definition": "lib/definitions/index.d.ts"
   },
   "scripts": {
-    "prepublish": "gulp",
     "test": "node_modules/.bin/mocha  test/**/*.test.js"
   }
 }
