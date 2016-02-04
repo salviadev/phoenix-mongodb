@@ -2,8 +2,7 @@
 
 This package contains:
 
-* Odata $filtrer parser
-* Mongodb adapter for Odata $filter  
+  
 
 
 
