@@ -1,3 +1,5 @@
+/// <reference path="../../../node_modules/phoenix-json-schema-tools/lib/definitions/phoenix-json-schema-tools.d.ts" />
+
 "use strict";
 
 import * as mongodb from 'mongodb';

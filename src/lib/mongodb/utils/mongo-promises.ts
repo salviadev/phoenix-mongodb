@@ -4,7 +4,7 @@ import * as mongodb from 'mongodb';
 
 export function insert(collection: mongodb.Collection, value: any): Promise<any> {
     return new Promise<any>((resolve, reject) => {
-        collection.insert(value, function(err, result) {
+        collection.insertOne(value, function(err, result) {
             if (err)
                 reject(err);
             else

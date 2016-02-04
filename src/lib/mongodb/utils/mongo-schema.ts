@@ -30,16 +30,16 @@ async function _removeCollections(db: mongodb.Db, except?: string[]): Promise<vo
     let p = [];
     for (let i = 0, len = collections.length; i < len; i++) {
         let collection = collections[i];
-        if (except && except.indexOf(collection.name) >= 0)
+        if (except && except.indexOf(collection.collectionName) >= 0)
             continue;
-        p.push(_dropCollection(db, collection.name));
+        p.push(_dropCollection(db, collection.collectionName));
     }
     await Promise.all<void>(p);
 }
 
 function _dropAllIndexes(db: mongodb.Db, collection: mongodb.Collection): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-        collection.dropAllIndexes(function(err) {
+        collection.dropIndexes(function(err) {
             if (err)
                 reject(err);
             else

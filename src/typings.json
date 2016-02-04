@@ -1,0 +1,9 @@
+{
+  "dependencies": {},
+  "devDependencies": {},
+  "ambientDependencies": {
+    "JSONStream": "github:DefinitelyTyped/DefinitelyTyped/JSONStream/JSONStream.d.ts#bd3b137455668434c60057c978f45df6b42b369b",
+    "mongodb": "github:DefinitelyTyped/DefinitelyTyped/mongodb/mongodb.d.ts#8f03a2103568213688251ab95b023054bcc9e1aa",
+    "node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#1c56e368e17bb28ca57577250624ca5bd561aa81"
+  }
+}
