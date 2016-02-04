@@ -1,5 +1,5 @@
 var assert = require("assert");
-var mongoImport = require("../../lib/mongodb/import");
+var mongoImport = require("../../lib/mongodb/utils/mongo-import");
 var path = require("path");
 describe('Import', function () {
     describe('Parse Json Stream', function () {
