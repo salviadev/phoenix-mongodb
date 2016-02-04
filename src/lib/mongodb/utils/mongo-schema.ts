@@ -118,6 +118,6 @@ export var db = {
 };
 
 export var collection = {
-    dropAllIndexes: _dropAllIndexes,
+    dropIndexes: _dropAllIndexes,
     createIndexes: _createIndexes
 };

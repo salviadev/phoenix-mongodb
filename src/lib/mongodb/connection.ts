@@ -14,7 +14,7 @@ export function connectionString(configMongo: { port?: number, host?: string, us
         url.push("@");
     }
     url.push(configMongo.host);
-    if (configMongo.port != 27017)
+    if (configMongo.port !== 27017)
         url.push(':' + configMongo.port);
     if (configMongo.database)
         url.push('/' + configMongo.database);

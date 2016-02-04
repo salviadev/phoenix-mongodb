@@ -6,6 +6,6 @@ export declare var db: {
     dropCollection: (db: mongodb.Db, collectionName: string) => Promise<void>;
 };
 export declare var collection: {
-    dropAllIndexes: (db: mongodb.Db, collection: mongodb.Collection) => Promise<void>;
+    dropIndexes: (db: mongodb.Db, collection: mongodb.Collection) => Promise<void>;
     createIndexes: (collection: mongodb.Collection, indexes: any[]) => Promise<void>;
 };
