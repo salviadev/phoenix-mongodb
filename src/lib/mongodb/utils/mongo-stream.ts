@@ -24,15 +24,19 @@ export class MongoDbWriteStream extends stream.Writable {
         callback();
     }
     public _write(chunk: any, encoding: string, callback: Function): void {
+        let that = this;
         try {
-
-            if (!this._collection)
-                mongodbp.insert(this._collection, chunk).then(function(result) { }).catch(function(error) { this.emit('error', error); });
+            if (that._collection)
+                mongodbp.insert(that._collection, chunk).then(function(result) { 
+                     that._afterInsert(callback);
+                }).catch(function(error) { 
+                    callback(error); 
+                });
             else
-                this._afterInsert(callback);
+                that._afterInsert(callback);
 
         } catch (error) {
-            this.emit('error', error);
+           callback(error); 
 
         }
     }

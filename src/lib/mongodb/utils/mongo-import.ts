@@ -18,14 +18,18 @@ export function importCollectionFromStream(collection: mongodb.Collection, schem
         let handleSuccess = function(): void {
             resolve();
         }
-        let ms = new mongoStream.MongoDbWriteStream(schema, collection);
-        let parser = JSONStream.parse('*');
-
-        stream.pipe(parser).pipe(ms);
-        stream.on('error', handleError);
-        parser.on('error', handleError);
-        ms.on('error', handleError);
-        ms.on('finish', handleSuccess);
+        try {
+            let ms = new mongoStream.MongoDbWriteStream(schema, collection);
+            let parser = JSONStream.parse('*');
+            ms = stream.pipe(parser).pipe(ms);
+            stream.on('error', handleError);
+            stream.on('error', handleError);
+            parser.on('error', handleError);
+            ms.on('error', handleError);
+            ms.on('finish', handleSuccess);
+        } catch (ex) {
+            handleError(ex);
+        }
     });
 }
 
