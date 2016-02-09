@@ -60,9 +60,11 @@ function _createCollection(db: mongodb.Db, collectionName: string): Promise<mong
 }
 
 
-function _createIndex(collection: mongodb.Collection, indexFields: string, unique: boolean): Promise<void> {
+function _createIndex(collection: mongodb.Collection, indexFields: string, unique: boolean, multiTenant: boolean): Promise<void> {
     let fields = indexFields.split(",");
-    let indexDesc = {};
+    let indexDesc: any = {};
+    if (multiTenant)
+        indexDesc.tenantId = 1; 
     fields.forEach(function(field) {
         let fields = field.trim().split(' ');
         if (fields.length > 1)
@@ -97,14 +99,14 @@ function _createTextIndex(collection: mongodb.Collection, indexFields: string): 
     });
 }
 
-async function _createIndexes(collection: mongodb.Collection, indexes: any[]): Promise<void> {
+async function _createIndexes(collection: mongodb.Collection, indexes: any[], multiTenant: boolean): Promise<void> {
     if (indexes && indexes.length) {
         let p = [];
         for (let indexDesc of indexes) {
             if (indexDesc.text)
                 p.push(_createTextIndex(collection, indexDesc.fields));
             else
-                p.push(_createIndex(collection, indexDesc.fields, indexDesc.unique));
+                p.push(_createIndex(collection, indexDesc.fields, indexDesc.unique, multiTenant));
         }
         await Promise.all<void>(p);
     }

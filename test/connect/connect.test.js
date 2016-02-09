@@ -3,7 +3,7 @@ var mongo = require("../../index");
 var path = require("path");
 describe('Connect', function () {
     describe('Connect string', function () {
-        var s = mongo.connectionString({
+        var s = mongo.db.connectionString({
             port: 45882,
             host: "ds045882.mongolab.com",
             database: "salvia",

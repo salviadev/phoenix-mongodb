@@ -4,7 +4,7 @@ var path = require("path");
 describe('Connect', function () {
     describe('Connect string', function () {
         it('Build Connection string', function () {
-            var s = mongo.connectionString({
+            var s = mongo.db.connectionString({
                 port: 45882,
                 host: "ds045882.mongolab.com",
                 database: "salvia",
@@ -13,14 +13,14 @@ describe('Connect', function () {
 
             });
             assert.equal(s, "mongodb://salvia:salvia@ds045882.mongolab.com:45882/salvia");
-            var s1 = mongo.connectionString({
+            var s1 = mongo.db.connectionString({
                 port: 45882,
                 host: "ds045882.mongolab.com",
                 database: "salvia"
              
             });
             assert.equal(s1, "mongodb://ds045882.mongolab.com:45882/salvia");
-            var s3 = mongo.connectionString({
+            var s3 = mongo.db.connectionString({
                 database: "salvia"
              
             });

@@ -10,15 +10,16 @@ import * as dbSchema from './utils/mongo-schema';
 import * as mongodbp  from './utils/mongo-promises';
 import * as mongodbImport  from './utils/mongo-import';
 
-export async function createCollection(db: mongodb.Db, schema: any): Promise<void> {
+async function createCollection(db: mongodb.Db, schema: any): Promise<void> {
     await jsonSchema.checkSchema(schema);
     let indexes = jsonSchema.indexesOfSchema(schema, true);
     let collection = await dbSchema.db.createCollection(db, schema.name);
-    await dbSchema.collection.createIndexes(collection, indexes);
+    await dbSchema.collection.createIndexes(collection, indexes, schema.multiTenent);
 }
 
 
 export async function createDatabase(db: mongodb.Db, schemas: any[]): Promise<void> {
+    await dbSchema.db.dropCollections(db);
     let p = schemas.map(function(schema) {
         return createCollection(db, schema);
     });
@@ -26,121 +27,36 @@ export async function createDatabase(db: mongodb.Db, schemas: any[]): Promise<vo
 
 }
 
-export async function createCollectionAndImportFromStream(db: mongodb.Db, schema: any, stream: stream.Readable): Promise<void> {
-    await createCollection(db, schema);
+export async function importCollectionFromStream(db: mongodb.Db, schema: any, stream: stream.Readable, override: boolean, tenantId?: number): Promise<void> {
+    let collections = await dbSchema.db.getCollections(db);
+    let names = collections.map(collection => {
+        return collection.collectionName;
+    });
+    let isNew = false;
+    if (names.indexOf(schema.name) < 0) {
+        await createCollection(db, schema);
+        isNew = false;
+    }
     let collection = await mongodbp.collection(db, schema.name);
-    mongodbImport.importCollectionFromStream(collection, schema, stream)
+    if (!isNew && isNew) {
+        //todo remove all records 
+    }
+    mongodbImport.importCollectionFromStream(collection, schema, stream, override, tenantId)
 }
 
-export async function createCollectionAndImportFile(db: mongodb.Db, schema: any, file: string): Promise<void> {
-    await createCollection(db, schema);
+export async function importCollectionFromFile(db: mongodb.Db, schema: any, file: string, override: boolean, tenantId?: number): Promise<void> {
+    let collections = await dbSchema.db.getCollections(db);
+    let names = collections.map(collection => {
+        return collection.collectionName;
+    });
+    let isNew = false;
+    if (names.indexOf(schema.name) < 0) {
+        await createCollection(db, schema);
+        isNew = false;
+    }
     let collection = await mongodbp.collection(db, schema.name);
-    await mongodbImport.importCollectionFromFile(collection, schema, file);
+    if (!isNew && isNew) {
+        //todo remove all records
+    }
+    await mongodbImport.importCollectionFromFile(collection, schema, file, override, tenantId);
 }
-
-/*
-
-
-var fs = require('fs'),
-    path = require("path"),
-    async = require('async'),
-    JSONStream = require('JSONStream'),
-    schemaUtils = require('./dbschemautils'),
-    schemaCtrls = require('../utils/schema-validation'),
-    json = require("../utils/json"),
-    mongoStream = require('./mongo-write-stream');
-
-
-async function _loadSchemaFromFiles(files, after) {
-    let schemas = [];
-    if (!files || !files.length) return schemas;
-
-    async.each(files, function(file, callback) {
-        json.loadFromFile(file, function(err, schema) {
-            if (err) return callback(err);
-            schemas.push(schema);
-            callback(null);
-        });
-
-    }, function(err) {
-        after(err, schemas);
-    });
-}
-
-
-
-
-
-
-
-
-
-
-function _loadSchemaFromFolder(schemapath, after) {
-    fs.readdir(schemapath, function(err, files) {
-        if (err) return after(err, null);
-        var jsonFiles = files.map(function(file) {
-            return path.join(schemapath, file);
-
-        }).filter(function(file) {
-            return file.toLowerCase().indexOf(".json") > 0;
-        });
-        var fileList = [];
-        async.each(jsonFiles, function(file, callback) {
-            fs.stat(file, function(err, stats) {
-                if (!err && stats.isFile())
-                    fileList.push(file);
-                callback(null);
-            });
-
-        }, function(err) {
-            if (err)
-                return after(err, null);
-            _loadSchemaFromFiles(fileList, after);
-        });
-
-    });
-};
-
-
-
-function _createDatabaseCollections(db, schemapath, dataPath, cb, after) {
-    _loadSchemaFromFolder(schemapath, function(err, schemas) {
-        if (err) return after(err, null);
-        schemaUtils.db.dropCollections(db, [], function(err, list) {
-            if (err) return after(err, null);
-            schemas = schemas || [];
-            async.each(schemas, function(schema, callback) {
-                createCollectionFromSchema(db, schema, function(err, collection) {
-                    if (err) return callback(err);
-                    if (dataPath) {
-                        _importCollection(schema, collection, path.resolve(dataPath, schema.$name + '.json'), function(err) {
-                            if (err)
-                                return callback(err);
-                            else
-                                return callback(null);
-                        }, cb);
-                    } else
-                        return callback(null);
-
-                });
-
-            }, function(err) {
-                after(err, null);
-            });
-
-
-        });
-
-    });
-}
-
-
-
-
-
-module.exports = {
-    createCollection: _createCollection
-
-};
-*/
