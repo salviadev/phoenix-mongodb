@@ -20,8 +20,8 @@ declare module 'phoenix-mongodb' {
     };
     export var schema: {
         createDatabase: (db: mongodb.Db, schemas: any[]) => Promise<void>;
-        importCollectionFromFile: (db: mongodb.Db, schema: any, file: string, insertMode: boolean, tenantId?: number) => Promise<void>;
-        importCollectionFromStream: (db: mongodb.Db, schema: any, stream: stream.Readable, insertMode: boolean, tenantId?: number) => Promise<void>;
+        importCollectionFromFile: (db: mongodb.Db, schema: any, file: string, options?: any, tenantId?: number) => Promise<void>;
+        importCollectionFromStream: (db: mongodb.Db, schema: any, stream: stream.Readable, options?: any, tenantId?: number) => Promise<void>;
     };
 }
 

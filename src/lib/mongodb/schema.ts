@@ -27,7 +27,7 @@ export async function createDatabase(db: mongodb.Db, schemas: any[]): Promise<vo
 
 }
 
-export async function importCollectionFromStream(db: mongodb.Db, schema: any, stream: stream.Readable, insertMode: boolean, tenantId?: number): Promise<void> {
+export async function importCollectionFromStream(db: mongodb.Db, schema: any, stream: stream.Readable, options?: any, tenantId?: number): Promise<void> {
     let collections = await dbSchema.db.getCollections(db);
     let names = collections.map(collection => {
         return collection.collectionName;
@@ -41,10 +41,10 @@ export async function importCollectionFromStream(db: mongodb.Db, schema: any, st
     if (!isNew && isNew) {
         //todo remove all records 
     }
-    await mongodbImport.importCollectionFromStream(collection, schema, stream, insertMode, tenantId)
+    await mongodbImport.importCollectionFromStream(collection, schema, stream, options, tenantId)
 }
 
-export async function importCollectionFromFile(db: mongodb.Db, schema: any, file: string, insertMode: boolean, tenantId?: number): Promise<void> {
+export async function importCollectionFromFile(db: mongodb.Db, schema: any, file: string, options?: any, tenantId?: number): Promise<void> {
     let collections = await dbSchema.db.getCollections(db);
     let names = collections.map(collection => {
         return collection.collectionName;
@@ -58,5 +58,5 @@ export async function importCollectionFromFile(db: mongodb.Db, schema: any, file
     if (!isNew && isNew) {
         //todo remove all records
     }
-    await mongodbImport.importCollectionFromFile(collection, schema, file, insertMode, tenantId);
+    await mongodbImport.importCollectionFromFile(collection, schema, file, options, tenantId);
 }
