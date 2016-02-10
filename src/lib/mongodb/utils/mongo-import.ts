@@ -9,8 +9,8 @@ import * as JSONStream from 'JSONStream';
 import * as mongoStream from './mongo-stream';
 
 
-export function importCollectionFromStream(collection: mongodb.Collection, schema: any, stream: stream.Readable, insertMode: boolean, tenantId?: number): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
+export function importCollectionFromStream(collection: mongodb.Collection, schema: any, stream: stream.Readable, insertMode: boolean, tenantId?: number): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
 
         let handleError = function(err): void {
             reject(err);
@@ -23,17 +23,16 @@ export function importCollectionFromStream(collection: mongodb.Collection, schem
             stream.on('error', handleError);
             parser.on('error', handleError);
             ms.on('error', handleError);
-            let handleSuccess = function(): void {
-                resolve();
-            }
-            ms.on('finish', handleSuccess);
+            ms.on('finish', function(){
+                resolve(ms.count);
+            });
         } catch (ex) {
             handleError(ex);
         }
     });
 }
 
-export function importCollectionFromFile(collection: mongodb.Collection, schema: any, file: string, insertMode: boolean, tenantId?: number): Promise<void> {
+export function importCollectionFromFile(collection: mongodb.Collection, schema: any, file: string, insertMode: boolean, tenantId?: number): Promise<number> {
     let stream = fs.createReadStream(file, {
         encoding: 'utf8'
     });
