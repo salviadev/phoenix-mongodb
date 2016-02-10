@@ -30,10 +30,11 @@ export class MongoDbWriteStream extends stream.Writable {
     public _write(chunk: any, encoding: string, callback: Function): void {
         let that = this;
         try {
+            console.log(that); 
             if (that._collection) {
                 if (this._schema.multiTenant && this._tenantId)
                     chunk.tenantId = this._tenantId;
-
+                     
                 if (that._insert) {
                     mongodbp.insert(that._collection, chunk).then(function(result) {
                         that._afterInsert(callback);
