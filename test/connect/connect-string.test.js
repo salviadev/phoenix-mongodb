@@ -17,12 +17,12 @@ describe('Connect', function () {
                 port: 45882,
                 host: "ds045882.mongolab.com",
                 database: "salvia"
-             
+
             });
             assert.equal(s1, "mongodb://ds045882.mongolab.com:45882/salvia");
             var s3 = mongo.db.connectionString({
                 database: "salvia"
-             
+
             });
             assert.equal(s3, "mongodb://localhost/salvia");
         });

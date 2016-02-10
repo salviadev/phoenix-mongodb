@@ -32,6 +32,8 @@ async function _removeCollections(db: mongodb.Db, except?: string[]): Promise<vo
         let collection = collections[i];
         if (except && except.indexOf(collection.collectionName) >= 0)
             continue;
+        if (collection.collectionName.indexOf('system.') === 0)
+            continue;
         p.push(_dropCollection(db, collection.collectionName));
     }
     await Promise.all<void>(p);
@@ -64,7 +66,7 @@ function _createIndex(collection: mongodb.Collection, indexFields: string, uniqu
     let fields = indexFields.split(",");
     let indexDesc: any = {};
     if (multiTenant)
-        indexDesc.tenantId = 1; 
+        indexDesc.tenantId = 1;
     fields.forEach(function(field) {
         let fields = field.trim().split(' ');
         if (fields.length > 1)

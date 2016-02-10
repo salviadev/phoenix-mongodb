@@ -12,11 +12,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
         step("next", void 0);
     });
 };
-var connection_1 = require('./lib/mongodb/connection');
+var mongodbConnection = require('./lib/mongodb/connection');
 var mongodbSchema = require('./lib/mongodb/schema');
 var dbpromises = require('./lib/mongodb/utils/mongo-promises');
 exports.db = {
-    connectionString: connection_1.connectionString,
+    connectionString: mongodbConnection.connectionString,
     connect: dbpromises.connect,
     close: dbpromises.close
 };
