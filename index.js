@@ -15,6 +15,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
 var mongodbConnection = require('./lib/mongodb/connection');
 var mongodbSchema = require('./lib/mongodb/schema');
 var dbpromises = require('./lib/mongodb/utils/mongo-promises');
+var mongodb_query_1 = require('./lib/mongodb/utils/mongodb-query');
 exports.db = {
     connectionString: mongodbConnection.connectionString,
     connect: dbpromises.connect,
@@ -24,4 +25,7 @@ exports.schema = {
     createDatabase: mongodbSchema.createDatabase,
     importCollectionFromFile: mongodbSchema.importCollectionFromFile,
     importCollectionFromStream: mongodbSchema.importCollectionFromStream
+};
+exports.odata = {
+    execQuery: mongodb_query_1.execOdataQuery
 };

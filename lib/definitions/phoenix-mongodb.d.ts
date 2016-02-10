@@ -23,5 +23,8 @@ declare module 'phoenix-mongodb' {
         importCollectionFromFile: (db: mongodb.Db, schema: any, file: string, options?: any, tenantId?: number) => Promise<void>;
         importCollectionFromStream: (db: mongodb.Db, schema: any, stream: stream.Readable, options?: any, tenantId?: number) => Promise<void>;
     };
+    export var odata: {
+        execQuery: (db: mongodb.Db, collectionName: string, schema: any, filter: any, options: any) => Promise<any>;
+    };
 }
 

@@ -9,10 +9,10 @@ var runSequence = require('run-sequence');
 
 gulp.task('clean', function () {
     return del([
-    'lib/',
-    './index.js'
-  ]);    
-   
+        'lib/',
+        './index.js'
+    ]);
+
 });
 
 gulp.task('definition-bundle', function () {
@@ -23,6 +23,15 @@ gulp.task('definition-bundle', function () {
         verbose: false
     });
 });
+
+gulp.task('upgrade', function () {
+    return del([
+        'node_modules/phoenix-utils',
+        'node_modules/phoenix-json-schema-tools'
+    ]);
+
+});
+
 
 
 gulp.task('ts', ['clean'], function () {
