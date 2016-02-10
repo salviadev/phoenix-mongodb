@@ -17,7 +17,7 @@ gulp.task('clean', function () {
 
 gulp.task('definition-bundle', function () {
     dts.bundle({
-        name: 'phoenix-odata',
+        name: 'phoenix-mongodb',
         main: 'lib/definitions/index.d.ts',
         exclude: /.*typings.*/,
         verbose: false

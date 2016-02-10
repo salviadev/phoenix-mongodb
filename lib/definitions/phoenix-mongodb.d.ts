@@ -3,7 +3,7 @@
 //   ../../mongodb
 //   ../../stream
 
-declare module 'phoenix-odata' {
+declare module 'phoenix-mongodb' {
     import * as mongodb from 'mongodb';
     import * as stream from 'stream';
     export var db: {
