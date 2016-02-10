@@ -15,9 +15,6 @@ export function importCollectionFromStream(collection: mongodb.Collection, schem
         let handleError = function(err): void {
             reject(err);
         };
-        let handleSuccess = function(): void {
-            resolve();
-        }
         try {
             let ms = new mongoStream.MongoDbWriteStream(schema, insertMode, tenantId || 0,  collection);
             let parser = JSONStream.parse('*');
@@ -26,6 +23,9 @@ export function importCollectionFromStream(collection: mongodb.Collection, schem
             stream.on('error', handleError);
             parser.on('error', handleError);
             ms.on('error', handleError);
+            let handleSuccess = function(): void {
+                resolve();
+            }
             ms.on('finish', handleSuccess);
         } catch (ex) {
             handleError(ex);
@@ -34,7 +34,6 @@ export function importCollectionFromStream(collection: mongodb.Collection, schem
 }
 
 export function importCollectionFromFile(collection: mongodb.Collection, schema: any, file: string, insertMode: boolean, tenantId?: number): Promise<void> {
-    console.log('Import from ...' + file)
     let stream = fs.createReadStream(file, {
         encoding: 'utf8'
     });
