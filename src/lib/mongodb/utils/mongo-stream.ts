@@ -33,13 +33,16 @@ export class MongoDbWriteStream extends stream.Writable {
             if (that._collection) {
                 if (this._schema.multiTenant && this._tenantId)
                     chunk.tenantId = this._tenantId;
-                     
+
                 if (that._insert) {
-                    mongodbp.insert(that._collection, chunk).then(function(result) {
-                        that._afterInsert(callback);
-                    }).catch(function(error) {
-                        callback(error);
+                    that._collection.insertOne(chunk, function(err, data) {
+                        if (err)
+                            callback(err);
+                        else
+                            that._afterInsert(callback);
                     });
+
+
                 } else {
                     // to do insert or update
                     that._afterInsert(callback);
