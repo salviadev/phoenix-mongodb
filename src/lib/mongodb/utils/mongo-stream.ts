@@ -7,12 +7,12 @@ import * as mongodbp  from './mongo-promises';
 export class MongoDbWriteStream extends stream.Writable {
     private _collection: mongodb.Collection;
     private _schema: any;
-    private _override: any;
+    private _insert: any;
     private _tenantId: number;
     public count: number;
 
 
-    constructor(schema: any, override: boolean, tenantId: number, collection: mongodb.Collection) {
+    constructor(schema: any, insertMode: boolean, tenantId: number, collection: mongodb.Collection) {
         super({
             objectMode: true,
             highWaterMark: 16
@@ -20,7 +20,7 @@ export class MongoDbWriteStream extends stream.Writable {
         this._schema = schema;
         this._tenantId = tenantId;
         this._collection = collection;
-        this._override = override;
+        this._insert = insertMode;
         this.count = 0;
     }
     private _afterInsert(callback: Function): void {
@@ -34,7 +34,7 @@ export class MongoDbWriteStream extends stream.Writable {
                 if (this._schema.multiTenant && this._tenantId)
                     chunk.tenantId = this._tenantId;
 
-                if (that._override) {
+                if (that._insert) {
                     mongodbp.insert(that._collection, chunk).then(function(result) {
                         that._afterInsert(callback);
                     }).catch(function(error) {

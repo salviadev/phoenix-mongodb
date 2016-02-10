@@ -3,10 +3,10 @@ import * as mongodb from 'mongodb';
 export declare class MongoDbWriteStream extends stream.Writable {
     private _collection;
     private _schema;
-    private _override;
+    private _insert;
     private _tenantId;
     count: number;
-    constructor(schema: any, override: boolean, tenantId: number, collection: mongodb.Collection);
+    constructor(schema: any, insertMode: boolean, tenantId: number, collection: mongodb.Collection);
     private _afterInsert(callback);
     _write(chunk: any, encoding: string, callback: Function): void;
 }
