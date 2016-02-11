@@ -3,7 +3,7 @@
 
 
 import * as mongodb  from 'mongodb';
-import * as odata  from 'phoenix-odata';
+import * as podata  from 'phoenix-odata';
 
 function _executeQuery(collection: mongodb.Collection, filter, options, cb: mongodb.MongoCallback<any>): void {
     let cursor = collection.find(filter);
@@ -40,22 +40,28 @@ export function execOdataQuery(connetionString: string, collectionName: string, 
             db.collection(collectionName, function(ex, collection) {
                 if (ex) return rejectAndClose(db, reject, ex);
                 let count;
-                if (options.count) {
-                    _executeQueryCount(collection, filter, options, function(ex, totalCount) {
-                        if (ex) return rejectAndClose(db, reject, ex);
-                        count = totalCount;
-                        _executeQuery(collection, filter, options, function(ex, docs) {
-                            resolveAndClose(db, resolve, { value: docs || [] });
-
+                _executeQuery(collection, filter, options, function(ex, docs: any[]) {
+                    if (options.limit) {
+                        if (docs.length < options.limit) {
+                            if (options.count) {
+                                options.count = false;
+                                count = (options.skip || 0) + docs.length;
+                            }
+                        } else
+                            docs.pop();
+                    }
+                    if (options.count) {
+                        _executeQueryCount(collection, filter, options, function(ex, totalCount) {
+                            if (ex) return rejectAndClose(db, reject, ex);
+                            count = totalCount;
+                            resolveAndClose(db, resolve, podata.queryResult(docs || [], count));
                         });
-                    });
 
-                } else {
-                    _executeQuery(collection, filter, options, function(ex, docs) {
-                        if (ex) return rejectAndClose(db, reject, ex);
-                        resolveAndClose(db, resolve, { value: docs || [] });
-                    });
-                }
+                    } else
+
+                        resolveAndClose(db, resolve, podata.queryResult(docs || [], count));
+                });
+
             });
         });
 
