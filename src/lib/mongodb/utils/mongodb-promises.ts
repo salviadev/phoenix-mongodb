@@ -38,7 +38,7 @@ export function connect(uri: string): Promise<mongodb.Db> {
 
 export function close(db: mongodb.Db): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-        db.close(function(err) {
+        db.close(true, function(err) {
             resolve();
         });
     });

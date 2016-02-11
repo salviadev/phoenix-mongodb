@@ -5,17 +5,14 @@ import * as stream from 'stream';
 
 import * as mongodbConnection  from './lib/mongodb/connection';
 import * as mongodbSchema  from './lib/mongodb/schema';
-import * as dbpromises  from './lib/mongodb/utils/mongo-promises';
 import {execOdataQuery}  from './lib/mongodb/utils/mongodb-query';
 
 export var db = {
-    connectionString: mongodbConnection.connectionString,
-    connect: dbpromises.connect,
-    close: dbpromises.close
+    connectionString: mongodbConnection.connectionString
 };
 
 export var schema = {
-    createDatabase: mongodbSchema.createDatabase,
+    createCollections: mongodbSchema.createCollections,
     importCollectionFromFile: mongodbSchema.importCollectionFromFile,
     importCollectionFromStream: mongodbSchema.importCollectionFromStream
 };

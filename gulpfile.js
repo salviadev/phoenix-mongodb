@@ -5,6 +5,7 @@ var merge = require('merge2');
 var ts = require('gulp-typescript');
 var dts = require('dts-bundle');
 var runSequence = require('run-sequence');
+var shell = require('gulp-shell');
 
 
 gulp.task('clean', function () {
@@ -24,13 +25,20 @@ gulp.task('definition-bundle', function () {
     });
 });
 
-gulp.task('upgrade', function () {
-    return del([
-        'node_modules/phoenix-utils',
-        'node_modules/phoenix-json-schema-tools'
-    ]);
 
+
+gulp.task('upgrade-phoenix-cli', shell.task(['npm install']));
+
+gulp.task('remove-phoenix-libs', function () {
+    return del([
+        'node_modules/phoenix-*'
+    ]);
 });
+
+gulp.task('upgrade', function (done) {
+    runSequence('remove-phoenix-libs', 'upgrade-phoenix-cli', done);
+});
+
 
 
 

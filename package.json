@@ -8,6 +8,7 @@
         "mongodb": "^2.1.x",
         "JSONStream": "latest",
         "phoenix-utils": "git+https://git@github.com/salviadev/phoenix-utils.git",
+        "phoenix-odata": "git+https://git@github.com/salviadev/phoenix-odata.git",
         "phoenix-json-schema-tools": "git+https://git@github.com/salviadev/phoenix-json-schema-tools.git"
     },
     "devDependencies": {
@@ -15,6 +16,7 @@
         "dts-bundle": "latest",
         "gulp-sourcemaps": "latest",
         "gulp-typescript": "latest",
+        "gulp-shell": "latest",
         "run-sequence": "latest",
         "merge2": "latest",
         "mocha": "latest",

@@ -4,9 +4,7 @@ import * as mongodb from 'mongodb';
 import * as stream  from 'stream';
 import * as fs from 'fs';
 import * as JSONStream from 'JSONStream';
-
-
-import * as mongoStream from './mongo-stream';
+import * as mongoStream from './mongodb-stream';
 
 
 export function importCollectionFromStream(collection: mongodb.Collection, schema: any, stream: stream.Readable, options?: any, tenantId?: number): Promise<number> {
@@ -35,10 +33,3 @@ export function importCollectionFromStream(collection: mongodb.Collection, schem
     });
 }
 
-export function importCollectionFromFile(collection: mongodb.Collection, schema: any, file: string, options?: any, tenantId?: number): Promise<number> {
-    let stream = fs.createReadStream(file, {
-        encoding: 'utf8'
-    });
-    return importCollectionFromStream(collection, schema, stream, options, tenantId)
-
-}

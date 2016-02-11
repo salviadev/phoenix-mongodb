@@ -2,7 +2,7 @@
 
 import * as stream  from 'stream';
 import * as mongodb  from 'mongodb';
-import * as mongodbp  from './mongo-promises';
+
 
 export class MongoDbWriteStream extends stream.Writable {
     private _collection: mongodb.Collection;
