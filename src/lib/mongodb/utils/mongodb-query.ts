@@ -12,7 +12,7 @@ function _executeQuery(collection: mongodb.Collection, filter, options, cb: mong
     if (options.skip)
         cursor = cursor.skip(options.skip);
     if (options.limit)
-        cursor = cursor.skip(options.limit);
+        cursor = cursor.limit(options.limit);
     cursor.toArray(cb);
 }
 
