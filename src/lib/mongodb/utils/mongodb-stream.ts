@@ -2,6 +2,8 @@
 
 import * as stream  from 'stream';
 import * as mongodb  from 'mongodb';
+import {deserializeFromJson}  from './mongodb-serialize';
+
 
 
 export class MongoDbWriteStream extends stream.Writable {
@@ -33,7 +35,7 @@ export class MongoDbWriteStream extends stream.Writable {
             if (that._collection) {
                 if (this._schema.multiTenant && this._tenantId)
                     chunk.tenantId = this._tenantId;
-
+                deserializeFromJson(chunk, that._schema);
                 if (that._insert) {
                     that._collection.insertOne(chunk, function(err, data) {
                         if (err)
