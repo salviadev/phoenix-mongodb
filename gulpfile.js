@@ -11,7 +11,8 @@ var shell = require('gulp-shell');
 gulp.task('clean', function () {
     return del([
         'lib/',
-        './index.js'
+        './index.js',
+        './src/**/*.js'
     ]);
 
 });
@@ -43,7 +44,7 @@ gulp.task('upgrade', function (done) {
 
 
 gulp.task('ts', ['clean'], function () {
-    var tsProject = ts.createProject(path.resolve('./src/tsconfig.json'));
+    var tsProject = ts.createProject(path.resolve('./tsconfig.json'));
     var tsResult = gulp.src(path.resolve('./src/**/*.ts')).pipe(ts(tsProject));
     return merge([ // Merge the two output streams, so this task is finished when the IO of both operations are done.
         tsResult.dts.pipe(gulp.dest('lib/definitions')),

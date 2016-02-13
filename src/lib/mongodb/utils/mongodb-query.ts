@@ -33,7 +33,7 @@ function resolveAndClose(db: mongodb.Db, resolve: (data?: any) => void, data?: a
     });
 }
 export function execOdataQuery(connetionString: string, collectionName: string, schema, filter: any, options: any): Promise<any> {
-
+   
     return new Promise<any>((resolve, reject) => {
         mongodb.MongoClient.connect(connetionString, function(ex, db) {
             if (ex) return reject(ex);

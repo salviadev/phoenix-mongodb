@@ -1,4 +1,4 @@
-// Compiled using typings@0.6.6
+// Compiled using typings@0.6.8
 // Source: https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/8f03a2103568213688251ab95b023054bcc9e1aa/mongodb/mongodb.d.ts
 // Type definitions for MongoDB v2.1
 // Project: https://github.com/mongodb/node-mongodb-native/tree/2.1
