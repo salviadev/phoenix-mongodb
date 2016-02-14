@@ -78,7 +78,7 @@ export function execOdataQueryId(connetionString: string, collectionName: string
                     if (!docs || !docs.length) {
                         return rejectAndClose(db, reject, { message: "Document not found.", status: 404 });
                     }
-                    return resolveAndClose(db, resolve, extractOdataResult(docs, schema, {}));
+                    return resolveAndClose(db, resolve, extractOdataResult(docs[0], schema, {}));
 
                 });
             });
