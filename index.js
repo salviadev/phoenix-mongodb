@@ -24,5 +24,6 @@ exports.schema = {
     importCollectionFromStream: mongodbSchema.importCollectionFromStream
 };
 exports.odata = {
-    execQuery: mongodb_query_1.execOdataQuery
+    execQuery: mongodb_query_1.execOdataQuery,
+    execQueryId: mongodb_query_1.execOdataQueryId
 };
