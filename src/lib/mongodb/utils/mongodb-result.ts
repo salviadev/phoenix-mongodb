@@ -8,5 +8,6 @@ export function extractOdataResult(docs: any, schema: any, options: any) {
         });
     } else {
         delete docs._id;
+        return docs;
     }
 } 
