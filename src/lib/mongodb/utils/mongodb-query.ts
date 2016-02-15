@@ -40,7 +40,7 @@ export function execOdataQuery(connetionString: string, collectionName: string, 
                 if (ex) return rejectAndClose(db, reject, ex);
                 let count;
                 _executeQuery(collection, filter, options, function(ex, docs: any[]) {
-                    docs = extractOdataResult(docs, schema, {});
+                    docs = extractOdataResult(docs, schema, options);
                     if (options.limit) {
                         if (docs.length < options.limit) {
                             if (options.count) {
@@ -78,7 +78,7 @@ export function execOdataQueryId(connetionString: string, collectionName: string
                     if (!docs || !docs.length) {
                         return rejectAndClose(db, reject, { message: "Document not found.", status: 404 });
                     }
-                    return resolveAndClose(db, resolve, extractOdataResult(docs[0], schema, {}));
+                    return resolveAndClose(db, resolve, extractOdataResult(docs[0], schema, options));
 
                 });
             });
