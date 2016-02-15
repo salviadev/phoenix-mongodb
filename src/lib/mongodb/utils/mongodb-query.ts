@@ -33,7 +33,7 @@ function resolveAndClose(db: mongodb.Db, resolve: (data?: any) => void, data?: a
 }
 
 export function execOdataQuery(connetionString: string, collectionName: string, schema, filter: any, options: any): Promise<any> {
-    if (options.search) {
+    if (options.text) {
        let keys = Object.keys(filter);
        if (!keys.length ||  filter.$and  ||  filter.$or ||  filter.$where) {
            filter.$text = options.text;
