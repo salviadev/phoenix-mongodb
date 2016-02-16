@@ -61,6 +61,7 @@ export function execOdataQuery(connetionString: string, collectionName: string, 
                 if (ex) return rejectAndClose(db, reject, ex);
                 let count;
                 _executeQuery(collection, filter, options, function(ex, docs: any[]) {
+                    console.log(docs);
                     docs = extractOdataResult(docs, schema, options);
                     if (options.limit) {
                         if (docs.length < options.limit) {
@@ -71,6 +72,7 @@ export function execOdataQuery(connetionString: string, collectionName: string, 
                         } else
                             docs.pop();
                     }
+                    console.log(options);
                     if (options.count) {
                         _executeQueryCount(collection, filter, options, function(ex, totalCount) {
                             if (ex) return rejectAndClose(db, reject, ex);
