@@ -7,7 +7,7 @@ import {extractOdataResult}  from './mongodb-result';
 function _executeQuery(collection: mongodb.Collection, filter, options, cb: mongodb.MongoCallback<any>): void {
     if (options.group) {
         let pipeline = [];
-        pipeline.push({$group: filter});
+        pipeline.push({$match: filter});
         pipeline.push({$group: options.group});
         if (options.sort)
             pipeline.push({ $sort : options.sort });
@@ -62,7 +62,7 @@ export function execOdataQuery(connetionString: string, collectionName: string, 
                 let count;
                 _executeQuery(collection, filter, options, function(ex, docs: any[]) {
                     console.log(docs);
-                    docs = extractOdataResult(docs, schema, options);
+                    docs = extractOdataResult(docs || [], schema, options);
                     if (options.limit) {
                         if (docs.length < options.limit) {
                             if (options.count) {
