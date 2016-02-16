@@ -72,7 +72,6 @@ export function execOdataQuery(connetionString: string, collectionName: string, 
                         } else
                             docs.pop();
                     }
-                    console.log(options);
                     if (options.count) {
                         _executeQueryCount(collection, filter, options, function(ex, totalCount) {
                             if (ex) return rejectAndClose(db, reject, ex);
