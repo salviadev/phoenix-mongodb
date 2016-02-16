@@ -5,6 +5,7 @@ import * as podata  from 'phoenix-odata';
 import {extractOdataResult}  from './mongodb-result';
 
 function _executeQuery(collection: mongodb.Collection, filter, options, cb: mongodb.MongoCallback<any>): void {
+    if (!options.limit) options.limit = 100;
     if (options.group) {
         let pipeline = [];
         pipeline.push({$match: filter});
@@ -61,7 +62,6 @@ export function execOdataQuery(connetionString: string, collectionName: string, 
                 if (ex) return rejectAndClose(db, reject, ex);
                 let count;
                 _executeQuery(collection, filter, options, function(ex, docs: any[]) {
-                    console.log(docs);
                     docs = extractOdataResult(docs || [], schema, options);
                     if (options.limit) {
                         if (docs.length < options.limit) {
