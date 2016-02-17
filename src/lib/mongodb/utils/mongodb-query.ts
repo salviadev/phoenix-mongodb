@@ -21,6 +21,7 @@ function _executeQuery(collection: mongodb.Collection, filter, options, cb: mong
         if (addCount) {
             pipeline.push({ $group: { _id: null, count: { $sum: 1 } } });
         }
+        console.log(pipeline);
         collection.aggregate(pipeline, cb);
     } else {
         let cursor = collection.find(filter);
