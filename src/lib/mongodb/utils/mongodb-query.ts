@@ -8,14 +8,16 @@ function _executeQuery(collection: mongodb.Collection, filter, options, cb: mong
     if (!options.limit) options.limit = 100;
     if (options.group) {
         let pipeline = [];
-        pipeline.push({$match: filter});
-        pipeline.push({$group: options.group});
+        pipeline.push({ $match: filter });
+        pipeline.push({ $group: options.group });
+        if (options.havingFilter)
+            pipeline.push({ $match: options.havingFilter });
         if (options.sort)
-            pipeline.push({ $sort : options.sort });
+            pipeline.push({ $sort: options.sort });
         if (options.skip)
-            pipeline.push({ $skip : options.skip });
+            pipeline.push({ $skip: options.skip });
         if (options.limit)
-            pipeline.push({ $limit : options.limit });
+            pipeline.push({ $limit: options.limit });
         collection.aggregate(pipeline, cb);
     } else {
         let cursor = collection.find(filter);
