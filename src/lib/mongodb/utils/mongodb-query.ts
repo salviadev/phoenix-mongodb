@@ -4,22 +4,23 @@ import * as mongodb  from 'mongodb';
 import * as podata  from 'phoenix-odata';
 import {extractOdataResult}  from './mongodb-result';
 
-function _executeQuery(collection: mongodb.Collection, filter, options, cb: mongodb.MongoCallback<any>): void {
+function _executeQuery(collection: mongodb.Collection, filter, options, cb: mongodb.MongoCallback<any>, addCount: boolean): void {
     if (!options.limit) options.limit = 100;
     if (options.group) {
         let pipeline = [];
-        
         pipeline.push({ $match: filter });
         pipeline.push({ $group: options.group });
         if (options.havingFilter)
             pipeline.push({ $match: options.havingFilter });
-        if (options.sort)
+        if (!addCount && options.sort)
             pipeline.push({ $sort: options.sort });
-        if (options.skip)
+        if (!addCount && options.skip)
             pipeline.push({ $skip: options.skip });
-        if (options.limit)
+        if (!addCount && options.limit)
             pipeline.push({ $limit: options.limit });
-        console.log(pipeline);
+        if (addCount) {
+            pipeline.push({ $group: { _id: null, count: { $sum: 1 } } });
+        }
         collection.aggregate(pipeline, cb);
     } else {
         let cursor = collection.find(filter);
@@ -35,8 +36,16 @@ function _executeQuery(collection: mongodb.Collection, filter, options, cb: mong
 
 
 function _executeQueryCount(collection: mongodb.Collection, filter, options, callback: (err, count) => void): void {
-    let cursor = collection.find(filter);
-    cursor.count(false, null, callback);
+    if (options.group) {
+        _executeQuery(collection, filter, options, function(ex, docs) {
+            if (ex) return callback(ex, 0);
+            callback(null, (docs && docs.length ? docs[0].count : 0));
+        
+        }, true);
+    } else {
+        let cursor = collection.find(filter);
+        cursor.count(false, null, callback);
+    }
 }
 function rejectAndClose(db: mongodb.Db, reject: (reason?: any) => void, reason?: any) {
     db.close(true, function(ex) {
@@ -85,7 +94,7 @@ export function execOdataQuery(connetionString: string, collectionName: string, 
 
                     } else
                         resolveAndClose(db, resolve, podata.queryResult(docs || [], count));
-                });
+                }, false);
 
             });
         });
