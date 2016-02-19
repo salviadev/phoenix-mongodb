@@ -60,6 +60,8 @@ function resolveAndClose(db: mongodb.Db, resolve: (data?: any) => void, data?: a
     });
 }
 
+
+
 export function execOdataQuery(connetionString: string, collectionName: string, schema, filter: any, options: any): Promise<any> {
     if (options.text) {
         let keys = Object.keys(filter);

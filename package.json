@@ -33,6 +33,6 @@
         "definition": "lib/definitions/phoenix-mongodb.d.ts"
     },
     "scripts": {
-        "test": "node_modules/.bin/mocha  test/**/*.test.js"
+        "test": "node_modules/.bin/mocha --timeout 30000 test/**/*.test.js"
     }
 }
