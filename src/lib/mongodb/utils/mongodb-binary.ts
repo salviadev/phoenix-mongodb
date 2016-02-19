@@ -14,10 +14,9 @@ function removeFile(db: any, id: string, cb: (ex: any) => void) {
     bucket.find({ _id: id }, { batchSize: 1 }).toArray(function(err, files) {
         if (err) return cb(err);
         if (files && files.length) {
-            bucket.delete(id, function(err) {
+            return bucket.delete(id, function(err) {
                 if (err) return cb(err);
                 return cb(null);
-                return
             });
 
         }
@@ -44,11 +43,12 @@ export function uploadBinaryProperty(uri: string, schema: any, pk: any, property
                 }
                 let old = docs[0];
                 if (old[propertyName]) {
-                    removeFile(db, old[propertyName], function(err) {
+                    return removeFile(db, old[propertyName], function(err) {
                         if (err) return closeAndCb(err);
-                        uploadStream(db, schema, fileName, contentType, stream, pk.tenantId, function(err, id) {
+                        return  uploadStream(db, schema, fileName, contentType, stream, pk.tenantId, function(err, id) {
+                            if (err) return closeAndCb(err);
                             old[propertyName] = id;
-                            collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
+                            return collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
                                 if (err) return closeAndCb(err);
                                 closeAndCb(null);
                             });
@@ -56,9 +56,10 @@ export function uploadBinaryProperty(uri: string, schema: any, pk: any, property
                         });
                     });
                 } else {
-                    uploadStream(db, schema, fileName, contentType, stream, pk.tenantId, function(err, id) {
+                    return uploadStream(db, schema, fileName, contentType, stream, pk.tenantId, function(err, id) {
+                        if (err) return closeAndCb(err);
                         old[propertyName] = id;
-                        collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
+                        return collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
                             if (err) return closeAndCb(err);
                             closeAndCb(null);
                         });
