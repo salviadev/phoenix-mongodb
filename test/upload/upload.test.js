@@ -27,7 +27,7 @@ describe('Binary', function () {
                 return;
             }
            
-            uploadStream(db, null, 'camus.jpg', is, 0, function (error, id) {
+            uploadStream(db, null, 'camus.jpg', 'image/jpeg', is, 0, function (error, id) {
                 if (!error)  success = true;
                 db.close(true, function (ex) {
                     assert.equal(success, true, "Upload done");
