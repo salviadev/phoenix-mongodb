@@ -14,6 +14,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
 };
 var mongodbConnection = require('./lib/mongodb/connection');
 var mongodbSchema = require('./lib/mongodb/schema');
+var mongodb_binary_1 = require('./lib/mongodb/utils/mongodb-binary');
 var mongodb_query_1 = require('./lib/mongodb/utils/mongodb-query');
 exports.db = {
     connectionString: mongodbConnection.connectionString
@@ -22,6 +23,9 @@ exports.schema = {
     createCollections: mongodbSchema.createCollections,
     importCollectionFromFile: mongodbSchema.importCollectionFromFile,
     importCollectionFromStream: mongodbSchema.importCollectionFromStream
+};
+exports.upload = {
+    uploadBinaryProperty: mongodb_binary_1.uploadBinaryProperty
 };
 exports.odata = {
     execQuery: mongodb_query_1.execOdataQuery,

@@ -19,6 +19,9 @@ declare module 'phoenix-mongodb' {
         importCollectionFromFile: (connectionUri: string, schema: any, file: string, options?: any, tenantId?: number) => Promise<void>;
         importCollectionFromStream: (connectionUri: string, schema: any, stream: stream.Readable, options?: any, tenantId?: number) => Promise<void>;
     };
+    export var upload: {
+        uploadBinaryProperty: (uri: string, schema: any, pk: any, propertyName: string, fileName: string, contentType: string, stream: any, cb: (ex: any) => void) => void;
+    };
     export var odata: {
         execQuery: (connetionString: string, collectionName: string, schema: any, filter: any, options: any) => Promise<any>;
         execQueryId: (connetionString: string, collectionName: string, schema: any, primaryKey: any, options: any) => Promise<any>;
