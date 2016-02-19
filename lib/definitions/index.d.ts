@@ -19,5 +19,5 @@ export declare var upload: {
 };
 export declare var odata: {
     execQuery: (connetionString: string, collectionName: string, schema: any, filter: any, options: any) => Promise<any>;
-    execQueryId: (connetionString: string, collectionName: string, schema: any, primaryKey: any, options: any) => Promise<any>;
+    execQueryId: (connetionString: string, collectionName: string, propertyName: string, schema: any, primaryKey: any, options: any) => Promise<any>;
 };

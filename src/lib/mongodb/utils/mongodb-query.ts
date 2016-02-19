@@ -2,6 +2,7 @@
 
 import * as mongodb  from 'mongodb';
 import * as podata  from 'phoenix-odata';
+import * as putils  from 'phoenix-utils';
 import {extractOdataResult}  from './mongodb-result';
 
 function _executeQuery(collection: mongodb.Collection, filter, options, cb: mongodb.MongoCallback<any>, addCount: boolean): void {
@@ -106,7 +107,7 @@ export function execOdataQuery(connetionString: string, collectionName: string, 
 }
 
 
-export function execOdataQueryId(connetionString: string, collectionName: string, schema, primaryKey: any, options: any): Promise<any> {
+export function execOdataQueryId(connetionString: string, collectionName: string, propertyName: string, schema, primaryKey: any, options: any): Promise<any> {
     return new Promise<any>((resolve, reject) => {
         mongodb.MongoClient.connect(connetionString, function(ex, db) {
             if (ex) return reject(ex);
@@ -117,7 +118,11 @@ export function execOdataQueryId(connetionString: string, collectionName: string
                     if (!docs || !docs.length) {
                         return rejectAndClose(db, reject, { message: "Document not found.", status: 404 });
                     }
-                    return resolveAndClose(db, resolve, extractOdataResult(docs[0], schema, options));
+                    let sitem =  extractOdataResult(docs[0], schema, options);
+                    if (propertyName)  {
+                        return resolveAndClose(db, resolve, putils.utils.value(sitem, propertyName));
+                    } else 
+                        return resolveAndClose(db, resolve, sitem);
 
                 });
             });
@@ -125,3 +130,4 @@ export function execOdataQueryId(connetionString: string, collectionName: string
 
     });
 }
+

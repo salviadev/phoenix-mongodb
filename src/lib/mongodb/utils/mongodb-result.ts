@@ -11,3 +11,4 @@ export function extractOdataResult(docs: any, schema: any, options: any) {
         return podata.extractResult(docs, options);
     }
 } 
+
