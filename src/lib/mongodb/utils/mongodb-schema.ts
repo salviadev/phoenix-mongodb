@@ -62,8 +62,8 @@ function _createCollection(db: mongodb.Db, collectionName: string): Promise<mong
 }
 
 
-function _createIndex(collection: mongodb.Collection, indexFields: string, unique: boolean, multiTenant: boolean): Promise<void> {
-    let fields = indexFields.split(",");
+function _getIndexDesc(collection: mongodb.Collection, indexFields: string, unique: boolean, multiTenant: boolean): any {
+    let fields = indexFields.split(',');
     let indexDesc: any = {};
     if (multiTenant)
         indexDesc.tenantId = 1;
@@ -74,44 +74,38 @@ function _createIndex(collection: mongodb.Collection, indexFields: string, uniqu
         else
             indexDesc[fields[0]] = 1;
     });
-    return new Promise<void>((resolve, reject) => {
-        collection.createIndex(indexDesc, { unique: unique }, function(err, indexname) {
-            if (err)
-                reject(err);
-            else
-                resolve();
-        });
-    });
+    return {
+        key: indexDesc,
+        unique: unique
+    };
+
 }
 
-function _createTextIndex(collection: mongodb.Collection, indexFields: string): Promise<void> {
+function _getTextIndexDesc(collection: mongodb.Collection, indexFields: string): any {
     let fields = indexFields.split(",");
     let indexDesc = {};
     fields.forEach(function(field) {
         let fields = field.trim().split(' ');
         indexDesc[fields[0]] = 'text';
     });
-    return new Promise<void>((resolve, reject) => {
-        collection.createIndex(indexDesc, {}, function(err, indexname) {
-            if (err)
-                reject(err);
-            else
-                resolve();
-        });
-    });
+    return {
+        key: indexDesc
+    };
 }
 
-async function _createIndexes(collection: mongodb.Collection, indexes: any[], multiTenant: boolean): Promise<void> {
+function _createIndexes(collection: mongodb.Collection, indexes: any[], multiTenant: boolean): Promise<void> {
     if (indexes && indexes.length) {
         let p = [];
         for (let indexDesc of indexes) {
             if (indexDesc.text)
-                p.push(_createTextIndex(collection, indexDesc.fields));
+                p.push(_getTextIndexDesc(collection, indexDesc.fields));
             else
-                p.push(_createIndex(collection, indexDesc.fields, indexDesc.unique, multiTenant));
+                p.push(_getIndexDesc(collection, indexDesc.fields, indexDesc.unique, multiTenant));
         }
-        await Promise.all<void>(p);
-    }
+        return collection.createIndexes(p);
+    } else
+        return Promise.resolve<void>(undefined);
+     
 }
 
 export var db = {
