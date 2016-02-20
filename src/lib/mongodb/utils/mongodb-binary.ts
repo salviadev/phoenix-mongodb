@@ -102,7 +102,8 @@ export function downloadBinaryProperty(uri: string, schema: any, pk: any, proper
                     return closeAndCb(notFound());
                 try {
                     let bucket = _bucket(db);
-
+                    console.log("Before  bucket.find ");
+                    console.log(ov);
                     bucket.find({ _id: ov }, { batchSize: 1 }).toArray(function(err, files) {
                         if (err) return cb(err);
                         if (files && files.length) {
@@ -114,7 +115,7 @@ export function downloadBinaryProperty(uri: string, schema: any, pk: any, proper
                                 res.setHeader('Content-disposition', 'attachment; filename=' + file.filename)
                             else
                                 res.setHeader('Content-type', ct);
-                            downStream.pipe(res).
+                            return downStream.pipe(res).
                                 on('error', function(error) {
                                     closeAndCb(error);
                                 }).
