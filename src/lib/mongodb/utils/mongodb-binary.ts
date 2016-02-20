@@ -23,8 +23,9 @@ function removeFile(db: any, id: string, cb: (ex: any) => void) {
         return cb(null);
     });
 }
-
-
+function notFound(): any {
+    return new putils.http.HttpError("Not found", 404);
+}
 
 export function uploadBinaryProperty(uri: string, schema: any, pk: any, propertyName: string, fileName: string, contentType: string, stream: any, cb: (ex: any) => void) {
     mongodb.MongoClient.connect(uri, function(err, db) {
@@ -39,14 +40,19 @@ export function uploadBinaryProperty(uri: string, schema: any, pk: any, property
             collection.find(pk).toArray(function(ex, docs) {
                 if (ex) return closeAndCb(ex);
                 if (!docs.length) {
-                    return closeAndCb(new putils.http.HttpError("Not found", 404));
+                    return closeAndCb(notFound());
                 }
                 let old = docs[0];
-                if (old[propertyName]) {
+                
+                //id = old[propertyName];
+                let ov = putils.utils.value(old, propertyName);
+                if (ov) {
                     return removeFile(db, old[propertyName], function(err) {
                         if (err) return closeAndCb(err);
-                        return  uploadStream(db, schema, fileName, contentType, stream, pk.tenantId, function(err, id) {
+                        return uploadStream(db, schema, fileName, contentType, stream, pk.tenantId, function(err, id) {
                             if (err) return closeAndCb(err);
+                            //old[propertyName] = id;
+                            putils.utils.setValue(old, propertyName, id);
                             old[propertyName] = id;
                             return collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
                                 if (err) return closeAndCb(err);
@@ -58,7 +64,8 @@ export function uploadBinaryProperty(uri: string, schema: any, pk: any, property
                 } else {
                     return uploadStream(db, schema, fileName, contentType, stream, pk.tenantId, function(err, id) {
                         if (err) return closeAndCb(err);
-                        old[propertyName] = id;
+                        //old[propertyName] = id;
+                        putils.utils.setValue(old, propertyName, id);
                         return collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
                             if (err) return closeAndCb(err);
                             closeAndCb(null);
@@ -72,6 +79,63 @@ export function uploadBinaryProperty(uri: string, schema: any, pk: any, property
 
     });
 }
+
+export function downloadBinaryProperty(uri: string, schema: any, pk: any, propertyName: string, res: any, cb: (ex: any) => void) {
+    mongodb.MongoClient.connect(uri, function(err, db) {
+        if (err) return cb(err);
+        let closeAndCb = function(ex: any) {
+            db.close(true, function(err) {
+                cb(ex);
+            });
+        };
+        db.collection(schema.name, function(ex, collection) {
+            if (ex) return closeAndCb(ex);
+            collection.find(pk).toArray(function(ex, docs) {
+                if (ex) return closeAndCb(ex);
+                if (!docs.length) {
+                    return closeAndCb(notFound());
+                }
+                let old = docs[0];
+                //id = old[propertyName];
+                let ov = putils.utils.value(old, propertyName);
+                if (!ov)
+                    return closeAndCb(notFound());
+                try {
+                    let bucket = _bucket(db);
+
+                    bucket.find({ _id: ov }, { batchSize: 1 }).toArray(function(err, files) {
+                        if (err) return cb(err);
+                        if (files && files.length) {
+                            let file = files[0];
+                            let downStream = bucket.openDownloadStream(ov);
+                            let ct = file.contentType || '';
+                            let attachement = (ct.indexOf('image/') !== 0 && ct.indexOf('video/') !== 0);
+                            if (attachement)
+                                res.setHeader('Content-disposition', 'attachment; filename=' + file.filename)
+                            else
+                                res.setHeader('Content-type', ct);
+                            downStream.pipe(res).
+                                on('error', function(error) {
+                                    closeAndCb(error);
+                                }).
+                                on('finish', function() {
+                                    closeAndCb(null);
+                                });
+
+                        }
+                        return closeAndCb(notFound());
+                    });
+
+                } catch (ex) {
+                    return closeAndCb(ex);
+                }
+
+            });
+        });
+
+    });
+}
+
 
 
 export function uploadStream(db: any, schema: any, fileName: string, contentType: string, stream: any, tenantId: number, cb: (ex: any, id: any) => void) {

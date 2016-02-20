@@ -5,7 +5,7 @@ import * as stream from 'stream';
 
 import * as mongodbConnection  from './lib/mongodb/connection';
 import * as mongodbSchema  from './lib/mongodb/schema';
-import {uploadBinaryProperty}  from './lib/mongodb/utils/mongodb-binary';
+import {uploadBinaryProperty, downloadBinaryProperty}  from './lib/mongodb/utils/mongodb-binary';
 
 import {execOdataQuery, execOdataQueryId}  from './lib/mongodb/utils/mongodb-query';
 
@@ -20,7 +20,8 @@ export var schema = {
 };
 
 export var upload = {
-    uploadBinaryProperty: uploadBinaryProperty
+    uploadBinaryProperty: uploadBinaryProperty,
+    downloadBinaryProperty: downloadBinaryProperty
 };
 
 export var odata = {

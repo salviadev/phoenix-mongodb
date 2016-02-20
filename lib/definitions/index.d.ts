@@ -16,6 +16,7 @@ export declare var schema: {
 };
 export declare var upload: {
     uploadBinaryProperty: (uri: string, schema: any, pk: any, propertyName: string, fileName: string, contentType: string, stream: any, cb: (ex: any) => void) => void;
+    downloadBinaryProperty: (uri: string, schema: any, pk: any, propertyName: string, res: any, cb: (ex: any) => void) => void;
 };
 export declare var odata: {
     execQuery: (connetionString: string, collectionName: string, schema: any, filter: any, options: any) => Promise<any>;

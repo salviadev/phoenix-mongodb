@@ -25,7 +25,8 @@ exports.schema = {
     importCollectionFromStream: mongodbSchema.importCollectionFromStream
 };
 exports.upload = {
-    uploadBinaryProperty: mongodb_binary_1.uploadBinaryProperty
+    uploadBinaryProperty: mongodb_binary_1.uploadBinaryProperty,
+    downloadBinaryProperty: mongodb_binary_1.downloadBinaryProperty
 };
 exports.odata = {
     execQuery: mongodb_query_1.execOdataQuery,
