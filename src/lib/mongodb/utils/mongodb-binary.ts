@@ -102,8 +102,6 @@ export function downloadBinaryProperty(uri: string, schema: any, pk: any, proper
                     return closeAndCb(notFound());
                 try {
                     let bucket = _bucket(db);
-                    console.log("Before  bucket.find ");
-                    console.log(ov);
                     bucket.find({ _id: ov }, { batchSize: 1 }).toArray(function(err, files) {
                         if (err) return cb(err);
                         if (files && files.length) {
