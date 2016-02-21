@@ -1,7 +1,8 @@
 "use strict";
 
 import * as mongodb from 'mongodb';
-
+import * as pschema from 'phoenix-json-schema-tools';
+import * as mbinary from './mongodb-binary';
 
 function _getCollections(db: mongodb.Db): Promise<mongodb.Collection[]> {
     return new Promise<mongodb.Collection[]>((resolve, reject) => {
@@ -49,6 +50,34 @@ function _dropAllIndexes(db: mongodb.Db, collection: mongodb.Collection): Promis
         });
     });
 }
+
+function _clearCollection(db: mongodb.Db, collection: mongodb.Collection, schema: any, tenantId: number): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        let hasBinaryFields = pschema.schema.fieldsByType(schema, 'binary').length > 0;
+        let promises = [];
+        let filter: any = {};
+        if (tenantId) filter.tenantId = tenantId;
+        if (hasBinaryFields) {
+            return mbinary.removeFilesByParent(db, schema.name, tenantId || 0, function(ex) {
+                if (ex) return reject(ex);
+                return collection.deleteMany(filter, function(error, result) {
+                    if (error)
+                        return reject(error);
+                    resolve();
+                });
+
+            });
+
+        } else
+            return collection.deleteMany(filter, function(error, result) {
+                if (error)
+                    return reject(error);
+                resolve();
+            });
+    });
+}
+
+
 
 function _createCollection(db: mongodb.Db, collectionName: string): Promise<mongodb.Collection> {
     return new Promise<mongodb.Collection>((resolve, reject) => {
@@ -105,13 +134,14 @@ function _createIndexes(collection: mongodb.Collection, indexes: any[], multiTen
         return collection.createIndexes(p);
     } else
         return Promise.resolve<void>(undefined);
-     
+
 }
 
 export var db = {
     getCollections: _getCollections,
     dropCollections: _removeCollections,
     createCollection: _createCollection,
+    clearCollection: _clearCollection, 
     dropCollection: _dropCollection
 };
 

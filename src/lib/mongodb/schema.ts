@@ -27,6 +27,7 @@ export async function createCollections(connectionUri: string, schemas: any[]): 
         let p = schemas.map(function(schema) {
             return createCollection(db, schema);
         });
+        
         await Promise.all<void>(p);
     } finally {
         await mongodbp.close(db);
@@ -34,7 +35,7 @@ export async function createCollections(connectionUri: string, schemas: any[]): 
 
 }
 
-export async function importCollectionFromStream(connectionUri: string, schema: any, stream: stream.Readable, options?: any, tenantId?: number): Promise<void> {
+export async function importCollectionFromStream(connectionUri: string, schema: any, stream: stream.Readable, options?: {truncate: boolean, onImported: any}, tenantId?: number): Promise<void> {
     let db = await mongodbp.connect(connectionUri);
     try {
         let collections = await dbSchema.db.getCollections(db);
@@ -48,8 +49,8 @@ export async function importCollectionFromStream(connectionUri: string, schema: 
             isNew = false;
         }
         let collection = await mongodbp.collection(db, schema.name);
-        if (!isNew && isNew) {
-            //todo remove all records 
+        if (!isNew && options.truncate) {
+            await dbSchema.db.clearCollection(db, collection, schema, tenantId || 0);
         }
         await mongodbImport.importCollectionFromStream(collection, schema, stream, options, tenantId);
     } finally {
@@ -58,7 +59,7 @@ export async function importCollectionFromStream(connectionUri: string, schema: 
 }
 
 
-export async function importCollectionFromFile(connectionUri: string, schema: any, file: string, options?: any, tenantId?: number): Promise<void> {
+export async function importCollectionFromFile(connectionUri: string, schema: any, file: string, options?: {truncate: boolean, onImported: any}, tenantId?: number): Promise<void> {
     let stream = fs.createReadStream(file, {
         encoding: 'utf8'
     });

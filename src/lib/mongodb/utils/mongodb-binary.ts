@@ -9,7 +9,7 @@ function _bucket(db): any {
 }
 
 
-function removeFile(db: any, id: string, cb: (ex: any) => void) {
+export function removeFileById(db: any, id: string, cb: (ex: any) => void) {
     let bucket = _bucket(db);
     bucket.find({ _id: id }, { batchSize: 1 }).toArray(function(err, files) {
         if (err) return cb(err);
@@ -23,6 +23,28 @@ function removeFile(db: any, id: string, cb: (ex: any) => void) {
         return cb(null);
     });
 }
+
+export function removeFilesByParent(db: any, parent: string, tenantId: number, cb: (ex: any) => void) {
+    let bucket = _bucket(db);
+    bucket.find({ "metadata.tenantId": tenantId || 0, "metadata.parent": parent }, { batchSize: 1 }).toArray(function(err, files) {
+        if (err) return cb(err);
+        if (files && files.length) {
+            let promises = [];
+            files.forEach(function(file) {
+                promises.push(bucket.delete(file.id));
+            });
+            Promise.all(promises).then(function() {
+                cb(null);
+            }).catch(function(ex) {
+                cb(ex);
+            });
+
+        } else
+          cb(null);
+    });
+}
+
+
 function notFound(): any {
     return new putils.http.HttpError("Not found", 404);
 }
@@ -47,7 +69,7 @@ export function uploadBinaryProperty(uri: string, schema: any, pk: any, property
                 //id = old[propertyName];
                 let ov = putils.utils.value(old, propertyName);
                 if (ov) {
-                    return removeFile(db, old[propertyName], function(err) {
+                    return removeFileById(db, old[propertyName], function(err) {
                         if (err) return closeAndCb(err);
                         return uploadStream(db, schema, fileName, contentType, stream, pk.tenantId, function(err, id) {
                             if (err) return closeAndCb(err);

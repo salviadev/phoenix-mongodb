@@ -11,8 +11,14 @@ export declare var db: {
 };
 export declare var schema: {
     createCollections: (connectionUri: string, schemas: any[]) => Promise<void>;
-    importCollectionFromFile: (connectionUri: string, schema: any, file: string, options?: any, tenantId?: number) => Promise<void>;
-    importCollectionFromStream: (connectionUri: string, schema: any, stream: stream.Readable, options?: any, tenantId?: number) => Promise<void>;
+    importCollectionFromFile: (connectionUri: string, schema: any, file: string, options?: {
+        truncate: boolean;
+        onImported: any;
+    }, tenantId?: number) => Promise<void>;
+    importCollectionFromStream: (connectionUri: string, schema: any, stream: stream.Readable, options?: {
+        truncate: boolean;
+        onImported: any;
+    }, tenantId?: number) => Promise<void>;
 };
 export declare var upload: {
     uploadBinaryProperty: (uri: string, schema: any, pk: any, propertyName: string, fileName: string, contentType: string, stream: any, cb: (ex: any) => void) => void;
