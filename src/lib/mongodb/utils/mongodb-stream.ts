@@ -2,6 +2,7 @@
 
 import * as stream  from 'stream';
 import * as mongodb  from 'mongodb';
+import * as pschema from 'phoenix-json-schema-tools';
 import {primaryKeyFilter}  from './mongodb-utils';
 import {deserializeFromJson}  from './mongodb-serialize';
 
@@ -12,7 +13,7 @@ export class MongoDbWriteStream extends stream.Writable {
     private _collection: mongodb.Collection;
     private _schema: any;
     private _insert: any;
-    private _hasBlobs: boolean;
+    private _blobs: string[];
     private _tenantId: number;
     public count: number;
 
@@ -26,6 +27,7 @@ export class MongoDbWriteStream extends stream.Writable {
         this._tenantId = tenantId;
         this._collection = collection;
         this._insert = insertMode;
+        this._blobs = pschema.schema.fieldsByType(schema, 'binary');
         this.count = 0;
     }
     private _afterInsert(callback: Function): void {
@@ -50,6 +52,9 @@ export class MongoDbWriteStream extends stream.Writable {
                 } else {
                     let pp = primaryKeyFilter(chunk, that._schema);
                     that._collection.findOneAndReplace(pp, chunk, { upsert: true }, function(err, data) {
+                        if (data) {
+                            console.log(data);
+                        }
                         if (err)
                             callback(err);
                         else
