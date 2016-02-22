@@ -12,6 +12,7 @@ var csv = require('fast-csv');
 export function importCollectionFromStream(db: mongodb.Db,  collection: mongodb.Collection, schema: any, stream: stream.Readable, options?: {truncate: boolean, onImported: any, format?:string}, tenantId?: number): Promise<number> {
         options = options || {truncate: true, onImported: null};
         let isCsv = options.format === 'csv';
+        console.log(options);
         return new Promise<number>((resolve, reject) => {
 
             let handleError = function(err): void {
