@@ -4,11 +4,14 @@ import * as putils from 'phoenix-utils';
 var mongodb = require('mongodb');
 
 
+
+//get bucket name
 function _bucket(db): any {
     return new mongodb.GridFSBucket(db, { bucketName: "fs" });
 }
 
 
+// Remove a file by id
 export function removeFileById(db: any, id: string, cb: (ex: any) => void) {
     let bucket = _bucket(db);
     bucket.find({ _id: id }, { batchSize: 1 }).toArray(function(err, files) {
@@ -24,6 +27,8 @@ export function removeFileById(db: any, id: string, cb: (ex: any) => void) {
     });
 }
 
+
+// Remove all files that are referenced by an entity
 export function removeFilesByParent(db: any, parent: string, tenantId: number, cb: (ex: any) => void) {
     let bucket = _bucket(db);
     bucket.find({ "metadata.tenantId": tenantId || 0, "metadata.parent": parent }, { batchSize: 1 }).toArray(function(err, files) {
@@ -49,6 +54,10 @@ function notFound(): any {
     return new putils.http.HttpError("Not found", 404);
 }
 
+
+//Upload a file 
+// In the parent binary property set the "id" of file
+// In the file (fs.files) metadata set the reference yto parent entity
 export function uploadBinaryProperty(uri: string, schema: any, pk: any, propertyName: string, fileName: string, contentType: string, stream: any, cb: (ex: any) => void) {
     mongodb.MongoClient.connect(uri, function(err, db) {
         if (err) return cb(err);
@@ -167,6 +176,7 @@ export function uploadStream(db: any, schema: any, fileName: string, contentType
                 return cb(new putils.http.HttpError("Tenant id is empty.", 400), null);
             }
         }
+        //Set the reference yto parent entity
         let options = {
             contentType: contentType,
             metadata: { tenantId: tenantId || 0, parent: schema ? schema.name : '' }

@@ -5,6 +5,7 @@ import * as mongodb  from 'mongodb';
 import {deserializeFromJson}  from './mongodb-serialize';
 
 
+//mongodb writable stream
 
 export class MongoDbWriteStream extends stream.Writable {
     private _collection: mongodb.Collection;
