@@ -2,6 +2,7 @@
 
 import * as stream  from 'stream';
 import * as mongodb  from 'mongodb';
+import {primaryKeyFilter}  from './mongodb-utils';
 import {deserializeFromJson}  from './mongodb-serialize';
 
 
@@ -11,6 +12,7 @@ export class MongoDbWriteStream extends stream.Writable {
     private _collection: mongodb.Collection;
     private _schema: any;
     private _insert: any;
+    private _hasBlobs: boolean;
     private _tenantId: number;
     public count: number;
 
@@ -33,10 +35,10 @@ export class MongoDbWriteStream extends stream.Writable {
     public _write(chunk: any, encoding: string, callback: Function): void {
         let that = this;
         try {
+            if (this._schema.multiTenant && this._tenantId)
+                chunk.tenantId = this._tenantId;
+            deserializeFromJson(chunk, that._schema);
             if (that._collection) {
-                if (this._schema.multiTenant && this._tenantId)
-                    chunk.tenantId = this._tenantId;
-                deserializeFromJson(chunk, that._schema);
                 if (that._insert) {
                     that._collection.insertOne(chunk, function(err, data) {
                         if (err)
@@ -45,10 +47,14 @@ export class MongoDbWriteStream extends stream.Writable {
                             that._afterInsert(callback);
                     });
 
-
                 } else {
-                    // to do insert or update
-                    that._afterInsert(callback);
+                    let pp = primaryKeyFilter(chunk, that._schema);
+                    that._collection.findOneAndReplace(pp, chunk, { upsert: true }, function(err, data) {
+                        if (err)
+                            callback(err);
+                        else
+                            that._afterInsert(callback);
+                    });
                 }
             } else
                 that._afterInsert(callback);

@@ -4,6 +4,7 @@ export declare class MongoDbWriteStream extends stream.Writable {
     private _collection;
     private _schema;
     private _insert;
+    private _hasBlobs;
     private _tenantId;
     count: number;
     constructor(schema: any, insertMode: boolean, tenantId: number, collection: mongodb.Collection);
