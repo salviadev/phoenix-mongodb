@@ -63,7 +63,7 @@ export class MongoDbWriteStream extends stream.Writable {
                             if (that._blobs.length) {
                                 that._blobs.forEach(propName => {
                                     let v = putils.utils.value(data.value, propName);
-                                    let nv = putils.utils.value(data.value, chunk);
+                                    let nv = putils.utils.value(chunk, data.value);
                                     if (v !== nv) {
                                         removeBlobs.push(removeFileByIdPromise(that._db, v));
                                     }
