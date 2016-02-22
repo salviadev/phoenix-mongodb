@@ -3,14 +3,16 @@
 import * as stream  from 'stream';
 import * as mongodb  from 'mongodb';
 import * as pschema from 'phoenix-json-schema-tools';
+import * as putils from 'phoenix-utils';
 import {primaryKeyFilter}  from './mongodb-utils';
 import {deserializeFromJson}  from './mongodb-serialize';
-
+import {removeFileByIdPromise}  from './mongodb-binary';
 
 //mongodb writable stream
 
 export class MongoDbWriteStream extends stream.Writable {
     private _collection: mongodb.Collection;
+    private _db: mongodb.Db;
     private _schema: any;
     private _insert: any;
     private _blobs: string[];
@@ -18,7 +20,7 @@ export class MongoDbWriteStream extends stream.Writable {
     public count: number;
 
 
-    constructor(schema: any, insertMode: boolean, tenantId: number, collection: mongodb.Collection) {
+    constructor(schema: any, insertMode: boolean, tenantId: number, db: mongodb.Db, collection: mongodb.Collection) {
         super({
             objectMode: true,
             highWaterMark: 16
@@ -37,8 +39,8 @@ export class MongoDbWriteStream extends stream.Writable {
     public _write(chunk: any, encoding: string, callback: Function): void {
         let that = this;
         try {
-            if (this._schema.multiTenant && this._tenantId)
-                chunk.tenantId = this._tenantId;
+            if (that._schema.multiTenant && that._tenantId)
+                chunk.tenantId = that._tenantId;
             deserializeFromJson(chunk, that._schema);
             if (that._collection) {
                 if (that._insert) {
@@ -52,13 +54,34 @@ export class MongoDbWriteStream extends stream.Writable {
                 } else {
                     let pp = primaryKeyFilter(chunk, that._schema);
                     that._collection.findOneAndReplace(pp, chunk, { upsert: true }, function(err, data) {
-                        if (data) {
-                            console.log(data);
-                        }
                         if (err)
-                            callback(err);
-                        else
-                            that._afterInsert(callback);
+                            return callback(err);
+                        let removeBlobs = [];
+                        if (data && data.value) {
+                            //data.value --> is old value
+                            // remove files
+                            if (that._blobs.length) {
+                                that._blobs.forEach(propName => {
+                                    let v = putils.utils.value(data.value, propName);
+                                    let nv = putils.utils.value(data.value, chunk);
+                                    if (v !== nv) {
+                                        removeBlobs.push(removeFileByIdPromise(that._db, v));
+                                    }
+                                });
+
+                            }
+
+                        }
+                        if (removeBlobs.length) {
+                            Promise.all(removeBlobs).then(function() {
+                                that._afterInsert(callback);
+                            }).catch(function(err) {
+                                return callback(err);
+                            });
+                            return;
+                        }
+
+                        that._afterInsert(callback);
                     });
                 }
             } else

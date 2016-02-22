@@ -27,6 +27,17 @@ export function removeFileById(db: any, id: string, cb: (ex: any) => void) {
     });
 }
 
+export function removeFileByIdPromise(db: any, id: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        removeFileById(db, id, function(err) {
+            if (err)
+                reject(err);
+            else
+                resolve();
+        });
+    });
+}    
+ 
 
 // Remove all files that are referenced by an entity
 export function removeFilesByParent(db: any, parent: string, tenantId: number, cb: (ex: any) => void) {

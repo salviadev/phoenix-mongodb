@@ -52,7 +52,7 @@ export async function importCollectionFromStream(connectionUri: string, schema: 
         if (!isNew && options.truncate) {
             await dbSchema.db.clearCollection(db, collection, schema, tenantId || 0);
         }
-        await mongodbImport.importCollectionFromStream(collection, schema, stream, options, tenantId);
+        await mongodbImport.importCollectionFromStream(db, collection, schema, stream, options, tenantId);
     } finally {
         await mongodbp.close(db);
     }
