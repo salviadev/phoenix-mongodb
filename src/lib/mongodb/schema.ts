@@ -35,7 +35,7 @@ export async function createCollections(connectionUri: string, schemas: any[]): 
 
 }
 
-export async function importCollectionFromStream(connectionUri: string, schema: any, stream: stream.Readable, options?: {truncate: boolean, onImported: any}, tenantId?: number): Promise<void> {
+export async function importCollectionFromStream(connectionUri: string, schema: any, stream: stream.Readable, options?: {truncate: boolean, onImported: any, format?:string}, tenantId?: number): Promise<void> {
     let db = await mongodbp.connect(connectionUri);
     try {
         let collections = await dbSchema.db.getCollections(db);
@@ -59,7 +59,7 @@ export async function importCollectionFromStream(connectionUri: string, schema: 
 }
 
 
-export async function importCollectionFromFile(connectionUri: string, schema: any, file: string, options?: {truncate: boolean, onImported: any}, tenantId?: number): Promise<void> {
+export async function importCollectionFromFile(connectionUri: string, schema: any, file: string, options?: {truncate: boolean, onImported: any, format?:string}, tenantId?: number): Promise<void> {
     let stream = fs.createReadStream(file, {
         encoding: 'utf8'
     });

@@ -14,10 +14,12 @@ export declare var schema: {
     importCollectionFromFile: (connectionUri: string, schema: any, file: string, options?: {
         truncate: boolean;
         onImported: any;
+        format?: string;
     }, tenantId?: number) => Promise<void>;
     importCollectionFromStream: (connectionUri: string, schema: any, stream: stream.Readable, options?: {
         truncate: boolean;
         onImported: any;
+        format?: string;
     }, tenantId?: number) => Promise<void>;
 };
 export declare var upload: {
