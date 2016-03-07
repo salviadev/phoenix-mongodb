@@ -14,8 +14,8 @@ export declare var schema: {
     }, tenantId?: number) => Promise<void>;
 };
 export declare var upload: {
-    uploadBinaryProperty: (uri: string, schema: any, pk: any, propertyName: string, fileName: string, contentType: string, stream: any, cb: (ex: any) => void) => void;
-    downloadBinaryProperty: (uri: string, schema: any, pk: any, propertyName: string, res: any, cb: (ex: any) => void) => void;
+    uploadBinaryProperty: (settings: any, connections: any, schema: any, odataUri: OdataParsedUri, fileName: string, contentType: string, stream: any, cb: (ex: any) => void) => void;
+    downloadBinaryProperty: (settings: any, connections: any, schema: any, odataUri: OdataParsedUri, res: any, cb: (ex: any) => void) => void;
 };
 export declare var odata: {
     execQuery: (settings: any, connections: any, schema: any, odataUri: OdataParsedUri) => Promise<any>;
