@@ -1,2 +1,3 @@
-export declare function execOdataQuery(connetionString: string, collectionName: string, schema: any, filter: any, options: any): Promise<any>;
-export declare function execOdataQueryId(connetionString: string, collectionName: string, propertyName: string, schema: any, primaryKey: any, options: any): Promise<any>;
+import * as podata from 'phoenix-odata';
+export declare function execOdataQuery(settings: any, connections: any, schema: any, odataUri: podata.OdataParsedUri): Promise<any>;
+export declare function execOdataQueryId(settings: any, connections: any, schema: any, odataUri: podata.OdataParsedUri): Promise<any>;

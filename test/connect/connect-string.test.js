@@ -1,9 +1,9 @@
 var assert = require("assert");
-var mongo = require("../../index");
+var mongoDbUri = require("../../lib/mongodb/utils/mongodb-connection").mongoDbUri;
 var path = require("path");
 describe('Connect', function () {
     it('Build Connection string', function () {
-        var s = mongo.db.connectionString({
+        var s = mongoDbUri({
             port: 45882,
             host: "ds045882.mongolab.com",
             database: "salvia",
@@ -12,14 +12,14 @@ describe('Connect', function () {
 
         });
         assert.equal(s, "mongodb://salvia:salvia@ds045882.mongolab.com:45882/salvia");
-        var s1 = mongo.db.connectionString({
+        var s1 = mongoDbUri({
             port: 45882,
             host: "ds045882.mongolab.com",
             database: "salvia"
 
         });
         assert.equal(s1, "mongodb://ds045882.mongolab.com:45882/salvia");
-        var s3 = mongo.db.connectionString({
+        var s3 = mongoDbUri({
             database: "salvia"
 
         });

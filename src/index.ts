@@ -3,15 +3,13 @@
 import * as mongodb from 'mongodb';
 import * as stream from 'stream';
 
-import * as mongodbConnection  from './lib/mongodb/connection';
+
 import * as mongodbSchema  from './lib/mongodb/schema';
 import {uploadBinaryProperty, downloadBinaryProperty}  from './lib/mongodb/utils/mongodb-binary';
 
 import {execOdataQuery, execOdataQueryId}  from './lib/mongodb/utils/mongodb-query';
+import {OdataParsedUri}  from 'phoenix-odata';
 
-export var db = {
-    connectionString: mongodbConnection.connectionString
-};
 
 export var schema = {
     createCollections: mongodbSchema.createCollections,

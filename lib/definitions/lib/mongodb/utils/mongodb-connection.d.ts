@@ -1,4 +1,4 @@
-export declare function connectionString(configMongo: {
+export declare function mongoDbUri(configMongo: {
     port?: number;
     host?: string;
     user?: string;

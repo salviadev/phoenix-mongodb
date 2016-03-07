@@ -1,5 +1,6 @@
 "use strict";
-function connectionString(configMongo) {
+
+export function mongoDbUri(configMongo: { port?: number, host?: string, user?: string, password?: string, database?: string, options?: any }): string {
     configMongo = configMongo || {};
     configMongo.port = configMongo.port || 27017;
     configMongo.host = configMongo.host || 'localhost';
@@ -19,7 +20,7 @@ function connectionString(configMongo) {
         url.push('/' + configMongo.database);
     if (configMongo.options) {
         var first = true;
-        Object.keys(configMongo.options).forEach(function (v) {
+        Object.keys(configMongo.options).forEach(function(v) {
             if (first)
                 url.push("?");
             url.push(v + '=');
@@ -29,4 +30,7 @@ function connectionString(configMongo) {
     }
     return url.join('');
 }
-exports.connectionString = connectionString;
+
+
+
+

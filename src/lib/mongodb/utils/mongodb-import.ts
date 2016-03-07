@@ -20,13 +20,6 @@ export function importCollectionFromStream(db: mongodb.Db, collection: mongodb.C
         try {
             let ms = new mongoStream.MongoDbWriteStream(schema, options.truncate, tenantId || 0, db, collection);
             let parser = isCsv ? csv({ delimiter: ';', headers:true }) : JSONStream.parse('*');
-            if (isCsv) {
-                 parser.on("data", function(data) {
-                     console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-
-                    console.log(data);
-                })
-            }
             ms = stream.pipe(parser).pipe(ms);
             stream.on('error', handleError);
             stream.on('error', handleError);
