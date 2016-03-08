@@ -8,5 +8,5 @@ export declare var db: {
 };
 export declare var collection: {
     dropIndexes: (db: mongodb.Db, collection: mongodb.Collection) => Promise<void>;
-    createIndexes: (collection: mongodb.Collection, indexes: any[], multiTenant: boolean) => Promise<void>;
+    createIndexes: (collection: mongodb.Collection, indexes: any[], multiTenant: string) => Promise<void>;
 };

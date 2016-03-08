@@ -2,6 +2,7 @@
 
 import * as mongodb from 'mongodb';
 import * as pschema from 'phoenix-json-schema-tools';
+import * as putils from 'phoenix-utils';
 import * as mbinary from './mongodb-binary';
 
 function _getCollections(db: mongodb.Db): Promise<mongodb.Collection[]> {
@@ -56,9 +57,11 @@ function _clearCollection(db: mongodb.Db, collection: mongodb.Collection, schema
         let hasBinaryFields = pschema.schema.fieldsByType(schema, 'binary').length > 0;
         let promises = [];
         let filter: any = {};
-        if (tenantId) filter.tenantId = tenantId;
+        let prefix = '';
+        if (schema.multiTenant === putils.multitenant.SHARE) filter.tenantId = tenantId;
+        else if (schema.multiTenant === putils.multitenant.SCHEMA) prefix = putils.multitenant.schemaPrefix(tenantId, 'mongodb');
         if (hasBinaryFields) {
-            return mbinary.removeFilesByParent(db, schema.name, tenantId || 0, function(ex) {
+            return mbinary.removeFilesByParent(db, schema.name, prefix, filter.tenantId || 0, function(ex) {
                 if (ex) return reject(ex);
                 return collection.deleteMany(filter, function(error, result) {
                     if (error)
@@ -91,10 +94,10 @@ function _createCollection(db: mongodb.Db, collectionName: string): Promise<mong
 }
 
 
-function _getIndexDesc(collection: mongodb.Collection, indexFields: string, unique: boolean, multiTenant: boolean): any {
+function _getIndexDesc(collection: mongodb.Collection, indexFields: string, unique: boolean, multiTenant: string): any {
     let fields = indexFields.split(',');
     let indexDesc: any = {};
-    if (multiTenant)
+    if (multiTenant === putils.multitenant.SHARE)
         indexDesc.tenantId = 1;
     fields.forEach(function(field) {
         let fields = field.trim().split(' ');
@@ -122,7 +125,7 @@ function _getTextIndexDesc(collection: mongodb.Collection, indexFields: string):
     };
 }
 
-function _createIndexes(collection: mongodb.Collection, indexes: any[], multiTenant: boolean): Promise<void> {
+function _createIndexes(collection: mongodb.Collection, indexes: any[], multiTenant: string): Promise<void> {
     if (indexes && indexes.length) {
         let p = [];
         for (let indexDesc of indexes) {

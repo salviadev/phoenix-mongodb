@@ -68,25 +68,31 @@ function resolveAndClose(db: mongodb.Db, resolve: (data?: any) => void, data?: a
 
 export function execOdataQuery(settings: any, connections, schema: any, odataUri: podata.OdataParsedUri): Promise<any> {
     try {
-        let collectionName = schema.name;
         let sfilter = odataUri.query.$filter;
-        // addtenant id
-        if (schema.multiTenant === 'shared') {
-            //Add tenant Id to filter
-            let tenantIdFilter = util.format('(tenantId  eq %s)', odataUri.query.tenantId);
-            if (sfilter)
-                sfilter = '(' + sfilter + ') and ' + tenantIdFilter;
-            else
-                sfilter = tenantIdFilter;
-        } else if (schema.multiTenant == 'schema') {
-            //tenantId to  schema name
-            //prefix collectionName with schema
-            //collectionName = 
-        } else if (schema.multiTenant == 'db') {
-            // tenantId 2 database name
 
+        let prefix = '';
+        let collectionName = schema.name;
+        let tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
+        let csettings = putils.utils.clone(settings, true);
+
+        switch (schema.multiTenant) {
+            case putils.multitenant.SHARE:
+                //Add tenant Id to filter
+                let tenantIdFilter = util.format('(tenantId  eq %d)', tenantId);
+                if (sfilter)
+                    sfilter = '(' + sfilter + ') and ' + tenantIdFilter;
+                else
+                    sfilter = tenantIdFilter;
+                break;
+            case putils.multitenant.SCHEMA:
+                prefix = putils.multitenant.schemaPrefix(tenantId, 'mongodb');
+                collectionName = putils.multitenant.collectionName(tenantId, schema.name, 'mongodb');
+                break;
+            case putils.multitenant.DB:
+                csettings.database = putils.multitenant.databaseName(tenantId, csettings.databasePrefix, 'mongodb');
+                break;
         }
-
+     
         let options = podata.mongodb.queryOptions(odataUri.query, schema);
         options.application = odataUri.application;
         options.entity = odataUri.entity;
@@ -101,7 +107,7 @@ export function execOdataQuery(settings: any, connections, schema: any, odataUri
             }
         }
 
-        let connetionString = mongoDbUri(settings);
+        let connetionString = mongoDbUri(csettings);
 
         return new Promise<any>((resolve, reject) => {
             mongodb.MongoClient.connect(connetionString, function(ex, db) {
@@ -145,20 +151,29 @@ export function execOdataQuery(settings: any, connections, schema: any, odataUri
 
 export function execOdataQueryId(settings: any, connections, schema: any, odataUri: podata.OdataParsedUri): Promise<any> {
     try {
+
+        let prefix = '';
         let propertyName = odataUri.propertyName;
         let collectionName = schema.name;
+        let tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
+        let csettings = putils.utils.clone(settings, true);
         let options = { select: podata.parseSelect(odataUri.query.$select), application: odataUri.application, entity: odataUri.entity };
         let primaryKey = podata.checkAndParseEntityId(odataUri, schema);
-        if (schema.multiTenant === 'shared') {
-            primaryKey.tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
-        } else if (schema.multiTenant == 'schema') {
-            //tenantId to  schema name
-            //prefix collectionName with schema
-            //collectionName = 
-        } else if (schema.multiTenant == 'db') {
-            // tenantId 2 database name
 
-        }
+        switch (schema.multiTenant) {
+            case putils.multitenant.SHARE:
+                //Add tenant Id to filter
+                primaryKey.tenantId = tenantId;
+                break;
+            case putils.multitenant.SCHEMA:
+                prefix = putils.multitenant.schemaPrefix(tenantId, 'mongodb');
+                collectionName = putils.multitenant.collectionName(tenantId, schema.name, 'mongodb');
+                break;
+            case putils.multitenant.DB:
+                csettings.database = putils.multitenant.databaseName(tenantId, csettings.databasePrefix, 'mongodb');
+                break;
+        }       
+        
         let connetionString = mongoDbUri(settings);
         return new Promise<any>((resolve, reject) => {
             mongodb.MongoClient.connect(connetionString, function(ex, db) {

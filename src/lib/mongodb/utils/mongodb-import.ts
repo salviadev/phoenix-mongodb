@@ -22,7 +22,6 @@ export function importCollectionFromStream(db: mongodb.Db, collection: mongodb.C
             let parser = isCsv ? csv({ delimiter: ';', headers:true }) : JSONStream.parse('*');
             ms = stream.pipe(parser).pipe(ms);
             stream.on('error', handleError);
-            stream.on('error', handleError);
             parser.on('error', handleError);
             ms.on('error', handleError);
             ms.on('finish', function() {

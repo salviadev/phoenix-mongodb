@@ -9,14 +9,14 @@ import {mongoDbUri}   from './mongodb-connection';
 
 
 //get bucket name
-function _bucket(db): any {
-    return new mongodb.GridFSBucket(db, { bucketName: "fs" });
+function _bucket(db, prefix): any {
+    return new mongodb.GridFSBucket(db, { bucketName: prefix + 'fs' });
 }
 
 
 // Remove a file by id
-export function removeFileById(db: any, id: string, cb: (ex: any) => void) {
-    let bucket = _bucket(db);
+export function removeFileById(db: any, id: string, schemaPrefix: string, cb: (ex: any) => void) {
+    let bucket = _bucket(db, schemaPrefix);
     bucket.find({ _id: id }, { batchSize: 1 }).toArray(function(err, files) {
         if (err) return cb(err);
         if (files && files.length) {
@@ -30,21 +30,21 @@ export function removeFileById(db: any, id: string, cb: (ex: any) => void) {
     });
 }
 
-export function removeFileByIdPromise(db: any, id: string): Promise<void> {
+export function removeFileByIdPromise(db: any, id: string, schemaPrefix: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-        removeFileById(db, id, function(err) {
+        removeFileById(db, id, schemaPrefix, function(err) {
             if (err)
                 reject(err);
             else
                 resolve();
         });
     });
-}    
- 
+}
+
 
 // Remove all files that are referenced by an entity
-export function removeFilesByParent(db: any, parent: string, tenantId: number, cb: (ex: any) => void) {
-    let bucket = _bucket(db);
+export function removeFilesByParent(db: any, parent: string, schemaPrefix:string, tenantId: number, cb: (ex: any) => void) {
+    let bucket = _bucket(db, schemaPrefix);
     bucket.find({ "metadata.tenantId": tenantId || 0, "metadata.parent": parent }, { batchSize: 1 }).toArray(function(err, files) {
         if (err) return cb(err);
         if (files && files.length) {
@@ -77,18 +77,23 @@ export function uploadBinaryProperty(settings: any, connections: any, schema: an
         let propertyName = odataUri.propertyName;
         let prefix = '';
         let collectionName = schema.name;
+        let tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
         let primaryKey = podata.checkAndParseEntityId(odataUri, schema);
-        if (schema.multiTenant === 'shared') {
-            primaryKey.tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
-        } else if (schema.multiTenant == 'schema') {
-            //tenantId to  schema name
-            //prefix collectionName with schema
-            //collectionName = 
-        } else if (schema.multiTenant == 'db') {
-            // tenantId 2 database name
-
+        let csettings = putils.utils.clone(settings, true);
+        switch (schema.multiTenant) {
+            case putils.multitenant.SHARE:
+                primaryKey.tenantId = tenantId;
+                break;
+            case putils.multitenant.SCHEMA:
+                prefix = putils.multitenant.schemaPrefix(tenantId, 'mongodb');
+                collectionName = putils.multitenant.collectionName(tenantId, schema.name, 'mongodb');
+                break;
+            case putils.multitenant.DB:
+                csettings.database = putils.multitenant.databaseName(tenantId, csettings.databasePrefix, 'mongodb');
+                break;
         }
-        let uri = mongoDbUri(settings);
+
+        let uri = mongoDbUri(csettings);
         mongodb.MongoClient.connect(uri, function(err, db) {
             if (err) return cb(err);
             let closeAndCb = function(ex: any) {
@@ -104,17 +109,16 @@ export function uploadBinaryProperty(settings: any, connections: any, schema: an
                         return closeAndCb(notFound());
                     }
                     let old = docs[0];
-                
+
                     //id = old[propertyName];
                     let ov = putils.utils.value(old, propertyName);
                     if (ov) {
-                        return removeFileById(db, old[propertyName], function(err) {
+                        return removeFileById(db, old[propertyName], prefix, function(err) {
                             if (err) return closeAndCb(err);
                             return uploadStream(db, schema, prefix, fileName, contentType, stream, primaryKey.tenantId, function(err, id) {
                                 if (err) return closeAndCb(err);
                                 //old[propertyName] = id;
                                 putils.utils.setValue(old, propertyName, id);
-                                old[propertyName] = id;
                                 return collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
                                     if (err) return closeAndCb(err);
                                     closeAndCb(null);
@@ -147,20 +151,28 @@ export function uploadBinaryProperty(settings: any, connections: any, schema: an
 export function downloadBinaryProperty(settings: any, connections: any, schema: any, odataUri: podata.OdataParsedUri, res: any, cb: (ex: any) => void) {
 
     try {
-        let propertyName = odataUri.propertyName;
-        let collectionName = schema.name;
-        let primaryKey = podata.checkAndParseEntityId(odataUri, schema);
-        if (schema.multiTenant === 'shared') {
-            primaryKey.tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
-        } else if (schema.multiTenant == 'schema') {
-            //tenantId to  schema name
-            //prefix collectionName with schema
-            //collectionName = 
-        } else if (schema.multiTenant == 'db') {
-            // tenantId 2 database name
 
+        let propertyName = odataUri.propertyName;
+        let prefix = '';
+        let collectionName = schema.name;
+        let tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
+        let primaryKey = podata.checkAndParseEntityId(odataUri, schema);
+        let csettings = putils.utils.clone(settings, true);
+        switch (schema.multiTenant) {
+            case putils.multitenant.SHARE:
+                primaryKey.tenantId = tenantId;
+                break;
+            case putils.multitenant.SCHEMA:
+                prefix = putils.multitenant.schemaPrefix(tenantId, 'mongodb');
+                collectionName = putils.multitenant.collectionName(tenantId, schema.name, 'mongodb');
+                break;
+            case putils.multitenant.DB:
+                csettings.database = putils.multitenant.databaseName(tenantId, csettings.databasePrefix, 'mongodb');
+                break;
         }
-        let uri = mongoDbUri(settings);
+
+
+        let uri = mongoDbUri(csettings);
 
         mongodb.MongoClient.connect(uri, function(err, db) {
             if (err) return cb(err);
@@ -182,7 +194,7 @@ export function downloadBinaryProperty(settings: any, connections: any, schema: 
                     if (!ov)
                         return closeAndCb(notFound());
                     try {
-                        let bucket = _bucket(db);
+                        let bucket = _bucket(db, prefix);
                         bucket.find({ _id: ov }, { batchSize: 1 }).toArray(function(err, files) {
                             if (err) return cb(err);
                             if (files && files.length) {
@@ -221,10 +233,10 @@ export function downloadBinaryProperty(settings: any, connections: any, schema: 
 }
 
 
-//TODO multitenant
+
 export function uploadStream(db: any, schema: any, prefix: string, fileName: string, contentType: string, stream: any, tenantId: number, cb: (ex: any, id: any) => void) {
     try {
-        let bucket = _bucket(db);
+        let bucket = _bucket(db, prefix);
         if (schema && schema.multiTenant) {
             if (!tenantId) {
                 return cb(new putils.http.HttpError("Tenant id is empty.", 400), null);
@@ -247,5 +259,5 @@ export function uploadStream(db: any, schema: any, prefix: string, fileName: str
         cb(ex, null);
 
     }
-}  
+}
 

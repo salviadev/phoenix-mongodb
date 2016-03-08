@@ -40,9 +40,13 @@ export class MongoDbWriteStream extends stream.Writable {
     }
     public _write(chunk: any, encoding: string, callback: Function): void {
         let that = this;
+        let prefix = '';
         try {
-            if (that._schema.multiTenant && that._tenantId)
+            if (that._schema.multiTenant === putils.multitenant.SHARE)
                 chunk.tenantId = that._tenantId;
+            else if (that._schema.multiTenant === putils.multitenant.SCHEMA)
+                prefix = putils.multitenant.schemaPrefix(that._tenantId, 'mongodb')
+                
             deserializeFromJson(chunk, that._schema);
             if (that._collection) {
                 if (that._insert) {
@@ -55,6 +59,7 @@ export class MongoDbWriteStream extends stream.Writable {
 
                 } else {
                     let pp = primaryKeyFilter(chunk, that._schema);
+                      
                     that._collection.findOneAndReplace(pp, chunk, { upsert: true }, function(err, data) {
                         if (err)
                             return callback(err);
@@ -67,7 +72,7 @@ export class MongoDbWriteStream extends stream.Writable {
                                     let v = putils.utils.value(data.value, propName);
                                     let nv = putils.utils.value(chunk, propName);
                                     if (v !== nv) {
-                                        removeBlobs.push(removeFileByIdPromise(that._db, v));
+                                        removeBlobs.push(removeFileByIdPromise(that._db, v, prefix));
                                     }
                                 });
 

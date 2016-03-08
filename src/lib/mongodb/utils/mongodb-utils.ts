@@ -11,7 +11,8 @@ export function primaryKeyFilter(value: any, schema: any): any {
     pkFields.forEach(pn => {
         putils.utils.setValue(res, pn, putils.utils.value(value, pn));
     });
-    if (schema.multiTenant) {
+    
+    if (schema.multiTenant === putils.multitenant.SHARE) {
         res.tenantId = value.tenantId;
     }
     return res;
