@@ -9,6 +9,10 @@ import * as mongodb from 'mongodb';
 import * as stream from 'stream';
 import * as fs from 'fs';
 import * as jsonSchema  from 'phoenix-json-schema-tools';
+import * as putils  from 'phoenix-utils';
+
+import * as podata  from 'phoenix-odata';
+import {mongoDbUri}   from './utils/mongodb-connection';
 import * as dbSchema from './utils/mongodb-schema';
 import * as mongodbp  from './utils/mongodb-promises';
 import * as mongodbImport  from './utils/mongodb-import';
@@ -35,7 +39,12 @@ export async function createCollections(connectionUri: string, schemas: any[]): 
 
 }
 
-export async function importCollectionFromStream(connectionUri: string, schema: any, stream: stream.Readable, options?: {truncate: boolean, onImported: any, format?:string}, tenantId?: number): Promise<void> {
+export async function importCollectionFromStream(settings: any, connections: any, schema: any, stream: stream.Readable, options?: {truncate: boolean, onImported: any, format?:string}, tenantId?: number): Promise<void> {
+    
+    let csettings = putils.utils.clone(settings, true); 
+    
+    
+    let connectionUri = mongoDbUri(csettings);
     let db = await mongodbp.connect(connectionUri);
     try {
         let collections = await dbSchema.db.getCollections(db);
@@ -59,9 +68,9 @@ export async function importCollectionFromStream(connectionUri: string, schema: 
 }
 
 
-export async function importCollectionFromFile(connectionUri: string, schema: any, file: string, options?: {truncate: boolean, onImported: any, format?:string}, tenantId?: number): Promise<void> {
+export async function importCollectionFromFile(settings: any, connections: any, schema: any, file: string, options?: {truncate: boolean, onImported: any, format?:string}, tenantId?: number): Promise<void> {
     let stream = fs.createReadStream(file, {
         encoding: 'utf8'
     });
-    await importCollectionFromStream(connectionUri, schema, stream, options, tenantId);
+    await importCollectionFromStream(settings, connections, schema, stream, options, tenantId);
 }

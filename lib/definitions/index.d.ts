@@ -2,12 +2,12 @@ import * as stream from 'stream';
 import { OdataParsedUri } from 'phoenix-odata';
 export declare var schema: {
     createCollections: (connectionUri: string, schemas: any[]) => Promise<void>;
-    importCollectionFromFile: (connectionUri: string, schema: any, file: string, options?: {
+    importCollectionFromFile: (settings: any, connections: any, schema: any, file: string, options?: {
         truncate: boolean;
         onImported: any;
         format?: string;
     }, tenantId?: number) => Promise<void>;
-    importCollectionFromStream: (connectionUri: string, schema: any, stream: stream.Readable, options?: {
+    importCollectionFromStream: (settings: any, connections: any, schema: any, stream: stream.Readable, options?: {
         truncate: boolean;
         onImported: any;
         format?: string;
