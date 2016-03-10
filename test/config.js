@@ -10,21 +10,4 @@ exports.connect = {
 
 };
 
-exports.schema = {
-    "name": "images",
-    "title": "Images",
-    "primaryKey": "id",
-    "multiTenant": true,
-    "properties": {
-        "id": {
-            "type": "string"
-        },
-        "titre": {
-            "type": "string"
-        },
-        "photo": {
-            "title": "Photo",
-            "type": "binary"
-        }
-    }
-};
+

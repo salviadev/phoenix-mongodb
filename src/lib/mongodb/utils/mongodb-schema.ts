@@ -61,7 +61,7 @@ function _clearCollection(db: mongodb.Db, collection: mongodb.Collection, schema
         if (schema.multiTenant === putils.multitenant.SHARE) filter.tenantId = tenantId;
         else if (schema.multiTenant === putils.multitenant.SCHEMA) prefix = putils.multitenant.schemaPrefix(tenantId, 'mongodb');
         if (hasBinaryFields) {
-            return mbinary.removeFilesByParent(db, schema.name, prefix, filter.tenantId || 0, function(ex) {
+             return mbinary.removeFilesByParent(db, schema.name, prefix, filter.tenantId || 0, function(ex) {
                 if (ex) return reject(ex);
                 return collection.deleteMany(filter, function(error, result) {
                     if (error)

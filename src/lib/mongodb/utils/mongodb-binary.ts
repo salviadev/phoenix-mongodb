@@ -50,7 +50,7 @@ export function removeFilesByParent(db: any, parent: string, schemaPrefix:string
         if (files && files.length) {
             let promises = [];
             files.forEach(function(file) {
-                promises.push(bucket.delete(file.id));
+                promises.push(bucket.delete(file._id));
             });
             Promise.all(promises).then(function() {
                 cb(null);
@@ -147,6 +147,7 @@ export function uploadBinaryProperty(settings: any, connections: any, schema: an
         cb(ex);
     }
 }
+
 
 export function downloadBinaryProperty(settings: any, connections: any, schema: any, odataUri: podata.OdataParsedUri, res: any, cb: (ex: any) => void) {
 
