@@ -31,7 +31,7 @@ export async function createCollections(connectionUri: string, schemas: any[]): 
         let p = schemas.map(function(schema) {
             return createCollection(db, schema);
         });
-        
+
         await Promise.all<void>(p);
     } finally {
         await mongodbp.close(db);
@@ -39,36 +39,34 @@ export async function createCollections(connectionUri: string, schemas: any[]): 
 
 }
 
-export async function importCollectionFromStream(settings: any, connections: any, schema: any, stream: stream.Readable, options?: {truncate: boolean, onImported: any, format?:string}, tenantId?: number): Promise<void> {
-    
-    let csettings = putils.utils.clone(settings, true); 
-    
-    
+export async function importCollectionFromStream(settings: any, connections: any, schema: any, stream: stream.Readable, options?: { truncate: boolean, onImported: any, format?: string }, tenantId?: number): Promise<void> {
+    let csettings = putils.utils.clone(settings, true);
     let connectionUri = mongoDbUri(csettings);
-    let db = await mongodbp.connect(connectionUri);
+    let connection = await mongodbp.connectAndCachePromise(connectionUri, connections);
     try {
-        let collections = await dbSchema.db.getCollections(db);
+        let collections = await dbSchema.db.getCollections(connection.db);
         let names = collections.map(collection => {
             return collection.collectionName;
         });
         let isNew = false;
         if (names.indexOf(schema.name) < 0) {
             // collection not found create it.
-            await createCollection(db, schema);
+            await createCollection(connection.db, schema);
             isNew = false;
         }
-        let collection = await mongodbp.collection(db, schema.name);
+        let collection = await mongodbp.collection(connection.db, schema.name);
         if (!isNew && options.truncate) {
-            await dbSchema.db.clearCollection(db, collection, schema, tenantId || 0);
+            await dbSchema.db.clearCollection(connection.db, collection, schema, tenantId || 0);
         }
-        await mongodbImport.importCollectionFromStream(db, collection, schema, stream, options, tenantId);
+        await mongodbImport.importCollectionFromStream(connection.db, collection, schema, stream, options, tenantId);
     } finally {
-        await mongodbp.close(db);
+        if (!connection.cache)
+            await mongodbp.close(connection.db);
     }
 }
 
 
-export async function importCollectionFromFile(settings: any, connections: any, schema: any, file: string, options?: {truncate: boolean, onImported: any, format?:string}, tenantId?: number): Promise<void> {
+export async function importCollectionFromFile(settings: any, connections: any, schema: any, file: string, options?: { truncate: boolean, onImported: any, format?: string }, tenantId?: number): Promise<void> {
     let stream = fs.createReadStream(file, {
         encoding: 'utf8'
     });

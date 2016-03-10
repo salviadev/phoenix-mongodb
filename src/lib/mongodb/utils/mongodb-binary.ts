@@ -6,6 +6,7 @@ import * as podata from 'phoenix-odata';
 
 var mongodb = require('mongodb');
 import {mongoDbUri}   from './mongodb-connection';
+import {connectAndCache}   from './mongodb-promises';
 
 
 //get bucket name
@@ -43,7 +44,7 @@ export function removeFileByIdPromise(db: any, id: string, schemaPrefix: string)
 
 
 // Remove all files that are referenced by an entity
-export function removeFilesByParent(db: any, parent: string, schemaPrefix:string, tenantId: number, cb: (ex: any) => void) {
+export function removeFilesByParent(db: any, parent: string, schemaPrefix: string, tenantId: number, cb: (ex: any) => void) {
     let bucket = _bucket(db, schemaPrefix);
     bucket.find({ "metadata.tenantId": tenantId || 0, "metadata.parent": parent }, { batchSize: 1 }).toArray(function(err, files) {
         if (err) return cb(err);
@@ -68,7 +69,12 @@ function notFound(): any {
     return new putils.http.HttpError("Not found", 404);
 }
 
-
+function _closeAndCb(ex: any, connection, cb) {
+    if (connection.cache) return cb(ex);
+    connection.db.close(true, function(err) {
+        cb(ex);
+    });
+};
 //Upload a file 
 // In the parent binary property set the "id" of file
 // In the file (fs.files) metadata set the reference yto parent entity
@@ -94,19 +100,16 @@ export function uploadBinaryProperty(settings: any, connections: any, schema: an
         }
 
         let uri = mongoDbUri(csettings);
-        mongodb.MongoClient.connect(uri, function(err, db) {
+        connectAndCache(uri, connections, function(err, connection) {
             if (err) return cb(err);
-            let closeAndCb = function(ex: any) {
-                db.close(true, function(err) {
-                    cb(ex);
-                });
-            };
+            let db = connection.db;
+
             db.collection(collectionName, function(ex, collection) {
-                if (ex) return closeAndCb(ex);
+                if (ex) return _closeAndCb(ex, connection, cb);
                 collection.find(primaryKey).toArray(function(ex, docs) {
-                    if (ex) return closeAndCb(ex);
+                    if (ex) return _closeAndCb(ex, connection, cb);
                     if (!docs.length) {
-                        return closeAndCb(notFound());
+                        return _closeAndCb(notFound(), connection, cb);
                     }
                     let old = docs[0];
 
@@ -114,26 +117,27 @@ export function uploadBinaryProperty(settings: any, connections: any, schema: an
                     let ov = putils.utils.value(old, propertyName);
                     if (ov) {
                         return removeFileById(db, old[propertyName], prefix, function(err) {
-                            if (err) return closeAndCb(err);
+                            if (err) return _closeAndCb(err, connection, cb);
                             return uploadStream(db, schema, prefix, fileName, contentType, stream, primaryKey.tenantId, function(err, id) {
-                                if (err) return closeAndCb(err);
+                                if (err) return _closeAndCb(err, connection, cb);
                                 //old[propertyName] = id;
                                 putils.utils.setValue(old, propertyName, id);
                                 return collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
-                                    if (err) return closeAndCb(err);
-                                    closeAndCb(null);
+                                    if (err) return _closeAndCb(err, connection, cb);
+                                    _closeAndCb(null, connection, cb);
+
                                 });
 
                             });
                         });
                     } else {
                         return uploadStream(db, schema, prefix, fileName, contentType, stream, primaryKey.tenantId, function(err, id) {
-                            if (err) return closeAndCb(err);
+                            if (err) return _closeAndCb(err, connection, cb);
                             //old[propertyName] = id;
                             putils.utils.setValue(old, propertyName, id);
                             return collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
-                                if (err) return closeAndCb(err);
-                                closeAndCb(null);
+                                if (err) return _closeAndCb(err, connection, cb);
+                                _closeAndCb(null, connection, cb);
                             });
 
                         });
@@ -172,28 +176,23 @@ export function downloadBinaryProperty(settings: any, connections: any, schema: 
                 break;
         }
 
-
         let uri = mongoDbUri(csettings);
-
-        mongodb.MongoClient.connect(uri, function(err, db) {
+        connectAndCache(uri, connections, function(err, connection) {
             if (err) return cb(err);
-            let closeAndCb = function(ex: any) {
-                db.close(true, function(err) {
-                    cb(ex);
-                });
-            };
+            let db = connection.db;
+
             db.collection(collectionName, function(ex, collection) {
-                if (ex) return closeAndCb(ex);
+                if (ex) return _closeAndCb(ex, connection, cb);
                 collection.find(primaryKey).toArray(function(ex, docs) {
-                    if (ex) return closeAndCb(ex);
+                    if (ex) return _closeAndCb(ex, connection, cb);
                     if (!docs.length) {
-                        return closeAndCb(notFound());
+                        return _closeAndCb(notFound(), connection, cb);
                     }
                     let old = docs[0];
                     //id = old[propertyName];
                     let ov = putils.utils.value(old, propertyName);
                     if (!ov)
-                        return closeAndCb(notFound());
+                        return _closeAndCb(notFound(), connection, cb);
                     try {
                         let bucket = _bucket(db, prefix);
                         bucket.find({ _id: ov }, { batchSize: 1 }).toArray(function(err, files) {
@@ -209,18 +208,18 @@ export function downloadBinaryProperty(settings: any, connections: any, schema: 
                                     res.setHeader('Content-type', ct);
                                 return downStream.pipe(res).
                                     on('error', function(error) {
-                                        closeAndCb(error);
+                                        _closeAndCb(error, connection, cb);
                                     }).
                                     on('finish', function() {
-                                        closeAndCb(null);
+                                        _closeAndCb(null, connection, cb);
                                     });
 
                             }
-                            return closeAndCb(notFound());
+                            return _closeAndCb(notFound(), connection, cb);
                         });
 
                     } catch (ex) {
-                        return closeAndCb(ex);
+                        return _closeAndCb(ex, connection, cb);
                     }
 
                 });

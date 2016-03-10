@@ -5,6 +5,7 @@ import * as util  from 'util';
 import * as podata  from 'phoenix-odata';
 import * as putils  from 'phoenix-utils';
 import {mongoDbUri}   from './mongodb-connection';
+import {connectAndCache}   from './mongodb-promises';
 import {extractOdataResult}  from './mongodb-result';
 
 function _executeQuery(collection: mongodb.Collection, filter, options, cb: mongodb.MongoCallback<any>, addCount: boolean): void {
@@ -52,14 +53,20 @@ function _executeQueryCount(collection: mongodb.Collection, filter, options, cal
         cursor.count(false, null, callback);
     }
 }
-function rejectAndClose(db: mongodb.Db, reject: (reason?: any) => void, reason?: any) {
-    db.close(true, function(ex) {
+
+
+function rejectAndClose(connection: { db: mongodb.Db, cache: boolean }, reject: (reason?: any) => void, reason?: any) {
+    if (connection.cache)
+        return reject(reason);
+    connection.db.close(true, function(ex) {
         reject(reason);
     });
 }
 
-function resolveAndClose(db: mongodb.Db, resolve: (data?: any) => void, data?: any) {
-    db.close(true, function(ex) {
+function resolveAndClose(connection: { db: mongodb.Db, cache: boolean }, resolve: (data?: any) => void, data?: any) {
+    if (connection.cache)
+        return resolve(data);
+    connection.db.close(true, function(ex) {
         resolve(data);
     });
 }
@@ -92,7 +99,7 @@ export function execOdataQuery(settings: any, connections, schema: any, odataUri
                 csettings.database = putils.multitenant.databaseName(tenantId, csettings.databasePrefix, 'mongodb');
                 break;
         }
-     
+
         let options = podata.mongodb.queryOptions(odataUri.query, schema);
         options.application = odataUri.application;
         options.entity = odataUri.entity;
@@ -110,10 +117,11 @@ export function execOdataQuery(settings: any, connections, schema: any, odataUri
         let connetionString = mongoDbUri(csettings);
 
         return new Promise<any>((resolve, reject) => {
-            mongodb.MongoClient.connect(connetionString, function(ex, db) {
+            connectAndCache(connetionString, connections, function(ex, connection) {
                 if (ex) return reject(ex);
+                let db = connection.db;
                 db.collection(collectionName, function(ex, collection) {
-                    if (ex) return rejectAndClose(db, reject, ex);
+                    if (ex) return rejectAndClose(connection, reject, ex);
                     let count;
                     _executeQuery(collection, filter, options, function(ex, docs: any[]) {
                         docs = extractOdataResult(docs || [], schema, options);
@@ -128,13 +136,13 @@ export function execOdataQuery(settings: any, connections, schema: any, odataUri
                         }
                         if (options.count) {
                             _executeQueryCount(collection, filter, options, function(ex, totalCount) {
-                                if (ex) return rejectAndClose(db, reject, ex);
+                                if (ex) return rejectAndClose(connection, reject, ex);
                                 count = totalCount;
-                                resolveAndClose(db, resolve, podata.queryResult(docs || [], count));
+                                resolveAndClose(connection, resolve, podata.queryResult(docs || [], count));
                             });
 
                         } else
-                            resolveAndClose(db, resolve, podata.queryResult(docs || [], count));
+                            resolveAndClose(connection, resolve, podata.queryResult(docs || [], count));
                     }, false);
 
                 });
@@ -172,24 +180,25 @@ export function execOdataQueryId(settings: any, connections, schema: any, odataU
             case putils.multitenant.DB:
                 csettings.database = putils.multitenant.databaseName(tenantId, csettings.databasePrefix, 'mongodb');
                 break;
-        }       
-        
+        }
+
         let connetionString = mongoDbUri(settings);
         return new Promise<any>((resolve, reject) => {
-            mongodb.MongoClient.connect(connetionString, function(ex, db) {
+            connectAndCache(connetionString, connections, function(ex, connection) {
+                let db = connection.db;
                 if (ex) return reject(ex);
                 db.collection(collectionName, function(ex, collection) {
-                    if (ex) return rejectAndClose(db, reject, ex);
+                    if (ex) return rejectAndClose(connection, reject, ex);
                     let count;
                     collection.find(primaryKey).limit(1).toArray(function(ex, docs: any[]) {
                         if (!docs || !docs.length) {
-                            return rejectAndClose(db, reject, { message: "Document not found.", status: 404 });
+                            return rejectAndClose(connection, reject, { message: "Document not found.", status: 404 });
                         }
                         let sitem = extractOdataResult(docs[0], schema, options);
                         if (propertyName) {
-                            return resolveAndClose(db, resolve, putils.utils.value(sitem, propertyName));
+                            return resolveAndClose(connection, resolve, putils.utils.value(sitem, propertyName));
                         } else
-                            return resolveAndClose(db, resolve, sitem);
+                            return resolveAndClose(connection, resolve, sitem);
 
                     });
                 });

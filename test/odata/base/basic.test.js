@@ -16,18 +16,24 @@ describe('Odata', function() {
                 var stream = fs.createReadStream(path.join(__dirname, '../../data/photos/john.smith.jpg'), {
                     encoding: 'utf8'
                 });
-
                 pmongo.upload.uploadBinaryProperty(cfg.connect, connections, schemas.userschema, odataUri,
                     'john.smith.jpg', 'image/jpg', stream, function(ex) {
                         if (ex) return done(ex);
                         odataUri = podata.parseOdataUri("/odata/master/user(1)", "GET");
-                        pmongo.odata.execQueryId(cfg.connect, connections, schemas.userschema, odataUri).then(function(user){
-                            done();
+                        pmongo.odata.execQueryId(cfg.connect, connections, schemas.userschema, odataUri).then(function(user) {
+                            odataUri = podata.parseOdataUri("/odata/master/user?$filter=id eq 2", "GET");
+                            pmongo.odata.execQuery(cfg.connect, connections, schemas.userschema, odataUri).then(function(users) {
+                                if (users.value.length !== 1)
+                                    return done(new Error('User with id = 2 not found.'));
+                                done();
+                            }).catch(function(err) {
+                                done(err);
+                            })
                         }).catch(function(err) {
-                            done(err);    
-                        })
-                        
-                        
+                            done(err);
+                        });
+
+
                     });
             }).catch(function(ex) {
                 done(ex);

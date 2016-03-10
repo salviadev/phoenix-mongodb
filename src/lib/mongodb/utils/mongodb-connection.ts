@@ -4,14 +4,14 @@ export function mongoDbUri(configMongo: { port?: number, host?: string, user?: s
     configMongo = configMongo || {};
     configMongo.port = configMongo.port || 27017;
     configMongo.host = configMongo.host || 'localhost';
-    var url = ["mongodb://"];
+    var url = ['mongodb://'];
     if (configMongo.user) {
         url.push(configMongo.user);
         if (configMongo.password) {
             url.push(":");
             url.push(configMongo.password);
         }
-        url.push("@");
+        url.push('@');
     }
     url.push(configMongo.host);
     if (configMongo.port !== 27017)
@@ -22,7 +22,7 @@ export function mongoDbUri(configMongo: { port?: number, host?: string, user?: s
         var first = true;
         Object.keys(configMongo.options).forEach(function(v) {
             if (first)
-                url.push("?");
+                url.push('?');
             url.push(v + '=');
             url.push(encodeURIComponent(configMongo.options[v]));
             first = false;
@@ -30,6 +30,8 @@ export function mongoDbUri(configMongo: { port?: number, host?: string, user?: s
     }
     return url.join('');
 }
+
+ 
 
 
 
