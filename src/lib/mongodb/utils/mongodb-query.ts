@@ -4,9 +4,14 @@ import * as mongodb  from 'mongodb';
 import * as util  from 'util';
 import * as podata  from 'phoenix-odata';
 import * as putils  from 'phoenix-utils';
+import * as pschema from 'phoenix-json-schema-tools';
 import {mongoDbUri}   from './mongodb-connection';
 import {connectAndCache}   from './mongodb-promises';
 import {extractOdataResult}  from './mongodb-result';
+import {parseRequestById, resolveAndClose, rejectAndClose}  from './mongodb-helper';
+import {removeFileByIdPromise}  from './mongodb-binary';
+
+
 
 function _executeQuery(collection: mongodb.Collection, filter, options, cb: mongodb.MongoCallback<any>, addCount: boolean): void {
     if (!options.limit) options.limit = 100;
@@ -55,21 +60,7 @@ function _executeQueryCount(collection: mongodb.Collection, filter, options, cal
 }
 
 
-function rejectAndClose(connection: { db: mongodb.Db, cache: boolean }, reject: (reason?: any) => void, reason?: any) {
-    if (connection.cache)
-        return reject(reason);
-    connection.db.close(true, function(ex) {
-        reject(reason);
-    });
-}
 
-function resolveAndClose(connection: { db: mongodb.Db, cache: boolean }, resolve: (data?: any) => void, data?: any) {
-    if (connection.cache)
-        return resolve(data);
-    connection.db.close(true, function(ex) {
-        resolve(data);
-    });
-}
 
 
 
@@ -157,48 +148,71 @@ export function execOdataQuery(settings: any, connections, schema: any, odataUri
 
 
 
+
 export function execOdataQueryId(settings: any, connections, schema: any, odataUri: podata.OdataParsedUri): Promise<any> {
     try {
-
-        let prefix = '';
-        let propertyName = odataUri.propertyName;
-        let collectionName = schema.name;
-        let tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
-        let csettings = putils.utils.clone(settings, true);
-        let options = { select: podata.parseSelect(odataUri.query.$select), application: odataUri.application, entity: odataUri.entity };
-        let primaryKey = podata.checkAndParseEntityId(odataUri, schema);
-
-        switch (schema.multiTenant) {
-            case putils.multitenant.SHARE:
-                //Add tenant Id to filter
-                primaryKey.tenantId = tenantId;
-                break;
-            case putils.multitenant.SCHEMA:
-                prefix = putils.multitenant.schemaPrefix(tenantId, 'mongodb');
-                collectionName = putils.multitenant.collectionName(tenantId, schema.name, 'mongodb');
-                break;
-            case putils.multitenant.DB:
-                csettings.database = putils.multitenant.databaseName(tenantId, csettings.databasePrefix, 'mongodb');
-                break;
-        }
-
-        let connetionString = mongoDbUri(settings);
+        let opts = parseRequestById(settings, connections, schema, odataUri);
         return new Promise<any>((resolve, reject) => {
-            connectAndCache(connetionString, connections, function(ex, connection) {
+            connectAndCache(opts.connetionString, connections, function(ex, connection) {
                 let db = connection.db;
                 if (ex) return reject(ex);
-                db.collection(collectionName, function(ex, collection) {
+                db.collection(opts.collectionName, function(ex, collection) {
                     if (ex) return rejectAndClose(connection, reject, ex);
                     let count;
-                    collection.find(primaryKey).limit(1).toArray(function(ex, docs: any[]) {
+                    collection.find(opts.primaryKey).limit(1).toArray(function(ex, docs: any[]) {
                         if (!docs || !docs.length) {
                             return rejectAndClose(connection, reject, { message: "Document not found.", status: 404 });
                         }
-                        let sitem = extractOdataResult(docs[0], schema, options);
-                        if (propertyName) {
-                            return resolveAndClose(connection, resolve, putils.utils.value(sitem, propertyName));
+                        let sitem = extractOdataResult(docs[0], schema, opts.options);
+                        if (opts.propertyName) {
+                            return resolveAndClose(connection, resolve, putils.utils.value(sitem, opts.propertyName));
                         } else
                             return resolveAndClose(connection, resolve, sitem);
+
+                    });
+                });
+            });
+
+        });
+    } catch (ex) {
+        return Promise.reject(ex);
+    }
+}
+
+
+export function execDelete(settings: any, connections, schema: any, odataUri: podata.OdataParsedUri): Promise<void> {
+    try {
+        let opts = parseRequestById(settings, connections, schema, odataUri);
+        return new Promise<void>((resolve, reject) => {
+            connectAndCache(opts.connetionString, connections, function(ex, connection) {
+                let db = connection.db;
+                if (ex) return reject(ex);
+                db.collection(opts.collectionName, function(ex, collection) {
+                    if (ex) return rejectAndClose(connection, reject, ex);
+
+
+                    collection.findOneAndDelete(opts.primaryKey, function(ex, item) {
+                        if (ex) return rejectAndClose(connection, reject, ex);
+                        if (!item)
+                            return resolveAndClose(connection, resolve, undefined);
+                     
+                        let blobs = pschema.schema.fieldsByType(schema, 'binary');
+                        let removeBlobs = [];
+                        if (blobs && blobs.length) {
+                            blobs.forEach(propName => {
+                                let v = putils.utils.value(item.value, propName);
+
+                                if (v) {
+                                    removeBlobs.push(removeFileByIdPromise(db, v, opts.prefix));
+                                }
+                            });
+
+                        }
+                        Promise.all(removeBlobs).then(function(res){
+                            return resolveAndClose(connection, resolve, undefined);
+                        }).catch(function(ex){
+                            return rejectAndClose(connection, reject, ex);
+                        })
 
                     });
                 });

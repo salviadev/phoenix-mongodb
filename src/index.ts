@@ -7,7 +7,7 @@ import * as stream from 'stream';
 import * as mongodbSchema  from './lib/mongodb/schema';
 import {uploadBinaryProperty, downloadBinaryProperty}  from './lib/mongodb/utils/mongodb-binary';
 
-import {execOdataQuery, execOdataQueryId}  from './lib/mongodb/utils/mongodb-query';
+import {execOdataQuery, execOdataQueryId, execDelete}  from './lib/mongodb/utils/mongodb-query';
 import {OdataParsedUri}  from 'phoenix-odata';
 
 
@@ -24,7 +24,8 @@ export var upload = {
 
 export var odata = {
     execQuery: execOdataQuery,
-    execQueryId: execOdataQueryId
+    execQueryId: execOdataQueryId,
+    execDelete: execDelete
 };
 
 

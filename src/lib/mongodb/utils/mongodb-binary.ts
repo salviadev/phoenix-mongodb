@@ -7,7 +7,7 @@ import * as podata from 'phoenix-odata';
 var mongodb = require('mongodb');
 import {mongoDbUri}   from './mongodb-connection';
 import {connectAndCache}   from './mongodb-promises';
-
+import {parseRequestById, resolveAndClose, rejectAndClose}  from './mongodb-helper';
 
 //get bucket name
 function _bucket(db, prefix): any {
@@ -69,172 +69,135 @@ function notFound(): any {
     return new putils.http.HttpError("Not found", 404);
 }
 
-function _closeAndCb(ex: any, connection, cb) {
-    if (connection.cache) return cb(ex);
-    connection.db.close(true, function(err) {
-        cb(ex);
-    });
-};
+
 //Upload a file 
 // In the parent binary property set the "id" of file
 // In the file (fs.files) metadata set the reference yto parent entity
-export function uploadBinaryProperty(settings: any, connections: any, schema: any, odataUri: podata.OdataParsedUri, fileName: string, contentType: string, stream: any, cb: (ex: any) => void) {
-    try {
-        let propertyName = odataUri.propertyName;
-        let prefix = '';
-        let collectionName = schema.name;
-        let tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
-        let primaryKey = podata.checkAndParseEntityId(odataUri, schema);
-        let csettings = putils.utils.clone(settings, true);
-        switch (schema.multiTenant) {
-            case putils.multitenant.SHARE:
-                primaryKey.tenantId = tenantId;
-                break;
-            case putils.multitenant.SCHEMA:
-                prefix = putils.multitenant.schemaPrefix(tenantId, 'mongodb');
-                collectionName = putils.multitenant.collectionName(tenantId, schema.name, 'mongodb');
-                break;
-            case putils.multitenant.DB:
-                csettings.database = putils.multitenant.databaseName(tenantId, csettings.databasePrefix, 'mongodb');
-                break;
-        }
+export function uploadBinaryProperty(settings: any, connections: any, schema: any, odataUri: podata.OdataParsedUri, fileName: string, contentType: string, stream: any): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        try {
 
-        let uri = mongoDbUri(csettings);
-        connectAndCache(uri, connections, function(err, connection) {
-            if (err) return cb(err);
-            let db = connection.db;
+            let opts = parseRequestById(settings, connections, schema, odataUri);
+            connectAndCache(opts.connetionString, connections, function(err, connection) {
+                if (err) return reject(err);
+                let db = connection.db;
 
-            db.collection(collectionName, function(ex, collection) {
-                if (ex) return _closeAndCb(ex, connection, cb);
-                collection.find(primaryKey).toArray(function(ex, docs) {
-                    if (ex) return _closeAndCb(ex, connection, cb);
-                    if (!docs.length) {
-                        return _closeAndCb(notFound(), connection, cb);
-                    }
-                    let old = docs[0];
+                db.collection(opts.collectionName, function(ex, collection) {
+                    if (ex) return rejectAndClose(connection, reject, ex);
+                    collection.find(opts.primaryKey).toArray(function(ex, docs) {
+                        if (ex) return rejectAndClose(connection, reject, ex);
+                        if (!docs.length) {
+                            return rejectAndClose(connection, reject, notFound());
 
-                    //id = old[propertyName];
-                    let ov = putils.utils.value(old, propertyName);
-                    if (ov) {
-                        return removeFileById(db, old[propertyName], prefix, function(err) {
-                            if (err) return _closeAndCb(err, connection, cb);
-                            return uploadStream(db, schema, prefix, fileName, contentType, stream, primaryKey.tenantId, function(err, id) {
-                                if (err) return _closeAndCb(err, connection, cb);
+                        }
+                        let old = docs[0];
+
+                        //id = old[propertyName];
+                        let ov = putils.utils.value(old, opts.propertyName);
+                        if (ov) {
+                            return removeFileById(db, old[opts.propertyName], opts.prefix, function(err) {
+                                if (err) return rejectAndClose(connection, reject, err);
+                                return uploadStream(db, schema, opts.prefix, fileName, contentType, stream, opts.primaryKey.tenantId, function(err, id) {
+                                    if (err) return rejectAndClose(connection, reject, err);
+                                    //old[propertyName] = id;
+                                    putils.utils.setValue(old, opts.propertyName, id);
+                                    return collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
+                                        if (err) return rejectAndClose(connection, reject, err);
+                                        return resolveAndClose(connection, resolve);
+
+                                    });
+
+                                });
+                            });
+                        } else {
+                            return uploadStream(db, schema, opts.prefix, fileName, contentType, stream, opts.primaryKey.tenantId, function(err, id) {
+                                if (err) return rejectAndClose(connection, reject, err);
                                 //old[propertyName] = id;
-                                putils.utils.setValue(old, propertyName, id);
+                                putils.utils.setValue(old, opts.propertyName, id);
                                 return collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
-                                    if (err) return _closeAndCb(err, connection, cb);
-                                    _closeAndCb(null, connection, cb);
-
+                                    if (err) return rejectAndClose(connection, reject, err);
+                                    return resolveAndClose(connection, resolve);
                                 });
 
                             });
-                        });
-                    } else {
-                        return uploadStream(db, schema, prefix, fileName, contentType, stream, primaryKey.tenantId, function(err, id) {
-                            if (err) return _closeAndCb(err, connection, cb);
-                            //old[propertyName] = id;
-                            putils.utils.setValue(old, propertyName, id);
-                            return collection.findOneAndUpdate({ _id: old._id }, old, function(err) {
-                                if (err) return _closeAndCb(err, connection, cb);
-                                _closeAndCb(null, connection, cb);
-                            });
 
-                        });
-
-                    }
+                        }
+                    });
                 });
-            });
 
-        });
-    } catch (ex) {
-        cb(ex);
-    }
+            });
+        } catch (ex) {
+            reject(ex);
+        }
+    });
 }
 
 
-export function downloadBinaryProperty(settings: any, connections: any, schema: any, odataUri: podata.OdataParsedUri, res: any, cb: (ex: any) => void) {
+export function downloadBinaryProperty(settings: any, connections: any, schema: any, odataUri: podata.OdataParsedUri, res: any): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        try {
+            let opts = parseRequestById(settings, connections, schema, odataUri);
+            connectAndCache(opts.connetionString, connections, function(err, connection) {
+                if (err) return reject(err);
+                let db = connection.db;
 
-    try {
+                db.collection(opts.collectionName, function(ex, collection) {
+                    if (ex) return rejectAndClose(connection, reject, ex);
+                    collection.find(opts.primaryKey).toArray(function(ex, docs) {
+                        if (ex) return rejectAndClose(connection, reject, ex);
+                        if (!docs.length) {
+                            return rejectAndClose(connection, reject, notFound());
+                        }
+                        let old = docs[0];
+                        //id = old[propertyName];
+                        let ov = putils.utils.value(old, opts.propertyName);
+                        if (!ov)
+                            return rejectAndClose(connection, reject, notFound());
+                        try {
+                            let bucket = _bucket(db, opts.prefix);
+                            bucket.find({ _id: ov }, { batchSize: 1 }).toArray(function(err, files) {
+                                if (err) return rejectAndClose(connection, reject, err);
+                                if (files && files.length) {
+                                    let file = files[0];
+                                    if (res) {
+                                        let downStream = bucket.openDownloadStream(ov);
+                                        let ct = file.contentType || '';
+                                        let attachement = (ct.indexOf('image/') !== 0 && ct.indexOf('video/') !== 0);
 
-        let propertyName = odataUri.propertyName;
-        let prefix = '';
-        let collectionName = schema.name;
-        let tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
-        let primaryKey = podata.checkAndParseEntityId(odataUri, schema);
-        let csettings = putils.utils.clone(settings, true);
-        switch (schema.multiTenant) {
-            case putils.multitenant.SHARE:
-                primaryKey.tenantId = tenantId;
-                break;
-            case putils.multitenant.SCHEMA:
-                prefix = putils.multitenant.schemaPrefix(tenantId, 'mongodb');
-                collectionName = putils.multitenant.collectionName(tenantId, schema.name, 'mongodb');
-                break;
-            case putils.multitenant.DB:
-                csettings.database = putils.multitenant.databaseName(tenantId, csettings.databasePrefix, 'mongodb');
-                break;
-        }
+                                        if (attachement)
+                                            res.setHeader('Content-disposition', 'attachment; filename=' + file.filename)
+                                        else
+                                            res.setHeader('Content-type', ct);
+                                        return downStream.pipe(res).
+                                            on('error', function(error) {
+                                                return rejectAndClose(connection, reject, error);
+                                            }).
+                                            on('finish', function() {
+                                                return resolveAndClose(connection, resolve);
+                                            });
 
-        let uri = mongoDbUri(csettings);
-        connectAndCache(uri, connections, function(err, connection) {
-            if (err) return cb(err);
-            let db = connection.db;
+                                    } else {
+                                        return resolveAndClose(connection, resolve);
+                                    }
 
-            db.collection(collectionName, function(ex, collection) {
-                if (ex) return _closeAndCb(ex, connection, cb);
-                collection.find(primaryKey).toArray(function(ex, docs) {
-                    if (ex) return _closeAndCb(ex, connection, cb);
-                    if (!docs.length) {
-                        return _closeAndCb(notFound(), connection, cb);
-                    }
-                    let old = docs[0];
-                    //id = old[propertyName];
-                    let ov = putils.utils.value(old, propertyName);
-                    if (!ov) {
-                        if (res) res.status(200).json(null);
-                        return _closeAndCb(null, connection, cb);
-                    }
-                    try {
-                        let bucket = _bucket(db, prefix);
-                        bucket.find({ _id: ov }, { batchSize: 1 }).toArray(function(err, files) {
-                            if (err) return cb(err);
-                            if (files && files.length) {
-                                let file = files[0];
-                                let downStream = bucket.openDownloadStream(ov);
-                                let ct = file.contentType || '';
-                                let attachement = (ct.indexOf('image/') !== 0 && ct.indexOf('video/') !== 0);
-                                if (attachement)
-                                    res.setHeader('Content-disposition', 'attachment; filename=' + file.filename)
-                                else
-                                    res.setHeader('Content-type', ct);
-                                return downStream.pipe(res).
-                                    on('error', function(error) {
-                                        _closeAndCb(error, connection, cb);
-                                    }).
-                                    on('finish', function() {
-                                        _closeAndCb(null, connection, cb);
-                                    });
+                                } else {
+                                    return rejectAndClose(connection, reject, notFound());
+                                }
 
-                            } else {
-                                if (res) res.status(200).json(null);
-                                return _closeAndCb(null, connection, cb);
-                            }
+                            });
 
-                        });
+                        } catch (ex) {
+                            return rejectAndClose(connection, reject, ex);
+                        }
 
-                    } catch (ex) {
-                        return _closeAndCb(ex, connection, cb);
-                    }
-
+                    });
                 });
+
             });
-
-        });
-    } catch (ex) {
-        cb(ex);
-
-    }
+        } catch (ex) {
+            reject(ex);
+        }
+    });
 }
 
 

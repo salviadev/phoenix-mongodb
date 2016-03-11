@@ -13,5 +13,6 @@ exports.upload = {
 };
 exports.odata = {
     execQuery: mongodb_query_1.execOdataQuery,
-    execQueryId: mongodb_query_1.execOdataQueryId
+    execQueryId: mongodb_query_1.execOdataQueryId,
+    execDelete: mongodb_query_1.execDelete
 };
