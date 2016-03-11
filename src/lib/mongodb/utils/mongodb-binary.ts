@@ -191,8 +191,10 @@ export function downloadBinaryProperty(settings: any, connections: any, schema: 
                     let old = docs[0];
                     //id = old[propertyName];
                     let ov = putils.utils.value(old, propertyName);
-                    if (!ov)
-                        return _closeAndCb(notFound(), connection, cb);
+                    if (!ov) {
+                        if (res) res.status(200).json(null);
+                        return _closeAndCb(null, connection, cb);
+                    }
                     try {
                         let bucket = _bucket(db, prefix);
                         bucket.find({ _id: ov }, { batchSize: 1 }).toArray(function(err, files) {
@@ -214,8 +216,11 @@ export function downloadBinaryProperty(settings: any, connections: any, schema: 
                                         _closeAndCb(null, connection, cb);
                                     });
 
+                            } else {
+                                if (res) res.status(200).json(null);
+                                return _closeAndCb(null, connection, cb);
                             }
-                            return _closeAndCb(notFound(), connection, cb);
+
                         });
 
                     } catch (ex) {
