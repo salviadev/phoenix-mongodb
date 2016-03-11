@@ -24,8 +24,11 @@ async function createCollection(db: mongodb.Db, schema: any): Promise<void> {
     await dbSchema.collection.createIndexes(collection, indexes, schema.multiTenent);
 }
 
-export async function createCollections(connectionUri: string, schemas: any[]): Promise<void> {
-    let db = await mongodbp.connect(connectionUri);
+export async function createCollections(settings, connections, schemas: any[]): Promise<void> {
+    let csettings = putils.utils.clone(settings, true);
+    let connectionUri = mongoDbUri(csettings);
+    let connection = await mongodbp.connectAndCachePromise(connectionUri, connections);
+    let db = connection.db;
     try {
         await dbSchema.db.dropCollections(db);
         let p = schemas.map(function(schema) {
@@ -34,7 +37,8 @@ export async function createCollections(connectionUri: string, schemas: any[]): 
 
         await Promise.all<void>(p);
     } finally {
-        await mongodbp.close(db);
+        if (!connection.cache)
+            await mongodbp.close(db);
     }
 
 }

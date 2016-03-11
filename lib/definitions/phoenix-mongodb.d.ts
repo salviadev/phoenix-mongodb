@@ -7,7 +7,7 @@ declare module 'phoenix-mongodb' {
     import * as stream from 'stream';
     import { OdataParsedUri } from 'phoenix-odata';
     export var schema: {
-        createCollections: (connectionUri: string, schemas: any[]) => Promise<void>;
+        createCollections: (settings: any, connections: any, schemas: any[]) => Promise<void>;
         importCollectionFromFile: (settings: any, connections: any, schema: any, file: string, options?: {
             truncate: boolean;
             onImported: any;
