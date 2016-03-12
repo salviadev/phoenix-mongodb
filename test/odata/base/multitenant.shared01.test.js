@@ -5,8 +5,8 @@ var schemas = require("../../data/schemas/user-model.js");
 
 
 describe('Multitenant Shared Odata', function() {
-    it('Import shared users from file', function(done) {
-        testCreate(schemas.suserschema, true, done);
+    it('Basic test', function(done) {
+        testCreate(schemas.userschema02, true, done);
     });
 })
 

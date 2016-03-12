@@ -21,7 +21,7 @@ async function createCollection(db: mongodb.Db, schema: any): Promise<void> {
     await jsonSchema.schema.checkSchema(schema);
     let indexes = jsonSchema.schema.indexesOfSchema(schema, true);
     let collection = await dbSchema.db.createCollection(db, schema.name);
-    await dbSchema.collection.createIndexes(collection, indexes, schema.multiTenent);
+    await dbSchema.collection.createIndexes(collection, indexes, schema.multiTenant);
 }
 
 export async function createCollections(settings, connections, schemas: any[]): Promise<void> {

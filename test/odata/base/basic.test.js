@@ -6,7 +6,7 @@ var schemas = require("../../data/schemas/user-model.js");
 
 describe('Odata', function() {
     it('Import users from file', function(done) {
-        testCreate(schemas.userschema, false, done);
+        testCreate(schemas.userschema01, false, done);
     });
 })
 
