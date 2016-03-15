@@ -11,7 +11,7 @@ export function parseRequestById(settings: any, connections, schema: any, odataU
     let prefix = '';
     let propertyName = odataUri.propertyName;
     let collectionName = schema.name;
-    let tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
+    let tenantId = odataUri.tenantId || 0;
     let csettings = putils.utils.clone(settings, true);
     let options = { select: podata.parseSelect(odataUri.query.$select), application: odataUri.application, entity: odataUri.entity };
     let primaryKey = podata.checkAndParseEntityId(odataUri, schema);

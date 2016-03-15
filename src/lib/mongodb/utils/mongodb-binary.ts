@@ -90,6 +90,7 @@ export function uploadBinaryProperty(settings: any, connections: any, schema: an
                             return rejectAndClose(connection, reject, notFound());
 
                         }
+                        
                         let old = docs[0];
 
                         //id = old[propertyName];

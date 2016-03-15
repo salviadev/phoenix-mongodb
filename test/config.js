@@ -1,7 +1,7 @@
 
 "use strict";
 
-exports.connect = {
+exports.connect1 = {
     port: 45882,
     host: "ds045882.mongolab.com",
     database: "salvia",
@@ -9,5 +9,15 @@ exports.connect = {
     password: "salvia"
 
 };
+
+
+exports.connect = {
+    host: "localhost",
+    database: "test",
+    user: "admin02",
+    password: "admin02"
+
+};
+
 
 

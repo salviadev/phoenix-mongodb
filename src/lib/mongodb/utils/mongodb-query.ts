@@ -61,16 +61,13 @@ function _executeQueryCount(collection: mongodb.Collection, filter, options, cal
 
 
 
-
-
-
 export function execOdataQuery(settings: any, connections, schema: any, odataUri: podata.OdataParsedUri): Promise<any> {
     try {
         let sfilter = odataUri.query.$filter;
 
         let prefix = '';
         let collectionName = schema.name;
-        let tenantId = parseInt(odataUri.query.tenantId, 10) || 0;
+        let tenantId = odataUri.tenantId || 0;
         let csettings = putils.utils.clone(settings, true);
 
         switch (schema.multiTenant) {
@@ -106,6 +103,9 @@ export function execOdataQuery(settings: any, connections, schema: any, odataUri
         }
 
         let connetionString = mongoDbUri(csettings);
+        if (odataUri.functionName && odataUri.functionName !== '$count') {
+            return Promise.reject({ message: util.format('Function "%s" not implemented.', odataUri.functionName), status: 501 });
+        }
 
         return new Promise<any>((resolve, reject) => {
             connectAndCache(connetionString, connections, function(ex, connection) {
@@ -114,6 +114,14 @@ export function execOdataQuery(settings: any, connections, schema: any, odataUri
                 db.collection(collectionName, function(ex, collection) {
                     if (ex) return rejectAndClose(connection, reject, ex);
                     let count;
+                    if (odataUri.functionName === '$count') {
+                        return _executeQueryCount(collection, filter, options, function(ex, totalCount) {
+                            if (ex) return rejectAndClose(connection, reject, ex);
+                            count = totalCount;
+                            resolveAndClose(connection, resolve, count);
+                        });
+
+                    }
                     _executeQuery(collection, filter, options, function(ex, docs: any[]) {
                         docs = extractOdataResult(docs || [], schema, options);
                         if (options.limit) {
@@ -195,7 +203,7 @@ export function execDelete(settings: any, connections, schema: any, odataUri: po
                         if (ex) return rejectAndClose(connection, reject, ex);
                         if (!item)
                             return resolveAndClose(connection, resolve, undefined);
-                     
+
                         let blobs = pschema.schema.fieldsByType(schema, 'binary');
                         let removeBlobs = [];
                         if (blobs && blobs.length) {
@@ -208,9 +216,9 @@ export function execDelete(settings: any, connections, schema: any, odataUri: po
                             });
 
                         }
-                        Promise.all(removeBlobs).then(function(res){
+                        Promise.all(removeBlobs).then(function(res) {
                             return resolveAndClose(connection, resolve, undefined);
-                        }).catch(function(ex){
+                        }).catch(function(ex) {
                             return rejectAndClose(connection, reject, ex);
                         })
 
